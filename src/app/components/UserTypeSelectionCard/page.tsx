@@ -4,89 +4,131 @@ import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import CardActionArea from "@mui/material/CardActionArea";
 import Avatar from "@mui/material/Avatar";
-import { Grid } from "@mui/material";
+import { Grid, Box } from "@mui/material";
+import { styled } from "@mui/material/styles";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { useRouter } from "next/navigation";
 
-export default function UserTypeSelectionCard({
-  key,
-  icon,
-  title,
-  description,
-}: {
-  key: number;
+const StyledCard = styled(Card)<{ isSelected: boolean }>(({ theme, isSelected }) => ({
+  width: "426px",
+  height: "108px",
+  top: "405px",
+  left: "918px",
+  border: isSelected ? "1px solid #007DFA" : "1px solid #F5F5F7",
+  borderRadius: "6px",
+  boxShadow: "none",
+  transition: "all 0.2s ease-in-out",
+  backgroundColor: "#FFFFFF",
+  "&:hover": {
+    borderColor: "#3B82F6",
+  },
+}));
+
+const StyledAvatar = styled(Avatar)<{ isSelected: boolean }>(({ theme, isSelected }) => ({
+  backgroundColor: isSelected ? "#007DFA" : "#F1F5F9",
+  width: "52px",
+  height: "52px",
+  borderRadius: "30px",
+  color: isSelected ? "#F1F5F9" : "#007DFA",
+}));
+
+export interface UserTypeSelectionCardProps {
   icon: React.ReactNode;
   title: string;
   description: string;
-}) {
+  type: string;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
+export default function UserTypeSelectionCard({
+  icon,
+  title,
+  description,
+  type,
+  isSelected,
+  onSelect,
+}: UserTypeSelectionCardProps) {
+    const router = useRouter();
+
+    const handleContinue = () => {
+    router.push(`/signup/form?type=${type}`);
+  };
   return (
-    <Card
-      style={{
-        width: "426px",
-        height: "108px",
-        top: "405px",
-        left: "918px",
-        border: "1px",
-        borderRadius: "6px",
-        marginBottom: "25px",
-      }}
-    >
-      <CardActionArea>
-        <CardContent>
-          <Grid container spacing={0}>
-            <Grid size={3} style={{ position: "relative", height: "100vh" }}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Avatar>{icon}</Avatar>
-              </div>
+    <StyledCard isSelected={isSelected}>
+      <CardActionArea onClick={onSelect} sx={{ height: "100%" }}>
+        <CardContent sx={{ p: 3, height: "100%" }}>
+          <Grid container spacing={0} alignItems="center" sx={{ height: "100%" }}>
+            <Grid size={3}>
+              <Box sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%"
+              }}>
+                <StyledAvatar isSelected={isSelected}>
+                  {icon}
+                </StyledAvatar>
+              </Box>
             </Grid>
 
-            <Grid size={5}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
+            <Grid size={6}>
+              <Box sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                height: "100%",
+                textAlign: "left"
+              }}>
                 <Typography
-                  gutterBottom
-                  variant="h5"
-                  component="div"
                   sx={{
-                    color: "black",
-                    fontWeight: "500",
-                    size: "16px",
+                    color: "#2F3367",
+                    fontWeight: 500,
+                    fontSize: "16px",
                     lineHeight: "100%",
-                    letterSpacing: "0%",
-                    verticalAlign: "middle",
+                    marginBottom: 1,
                   }}
                 >
                   {title}
                 </Typography>
                 <Typography
-                  variant="body2"
                   sx={{
-                    color: "black",
-                    fontWeight: "400",
-                    size: "14px",
+                    color: "#8692A6",
+                    fontWeight: 400,
+                    fontSize: "14px",
                     lineHeight: "100%",
-                    letterSpacing: "0%",
-                    verticalAlign: "middle",
                   }}
                 >
                   {description}
                 </Typography>
-              </div>
+              </Box>
+            </Grid>
+
+            <Grid size={3}>
+              <Box
+                onClick={handleContinue} 
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100%",
+                  cursor: "pointer" 
+                }}
+              >
+                {isSelected && (
+                  <ChevronRightIcon 
+                    sx={{ 
+                      color: "#007DFA", 
+                      fontSize: 24 
+                    }} 
+                  />
+                )}
+              </Box>
+
             </Grid>
           </Grid>
         </CardContent>
       </CardActionArea>
-    </Card>
+    </StyledCard>
   );
-}
+} 
