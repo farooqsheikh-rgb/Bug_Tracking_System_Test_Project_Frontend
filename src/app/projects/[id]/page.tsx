@@ -14,6 +14,12 @@ import {
   Paper,
   Checkbox,
   Avatar,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
 } from "@mui/material";
 import ResponsiveAppBar from "../../navbar";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -23,10 +29,37 @@ import React from "react";
 import PaginationBugs from "@/app/components/PaginationBugs/page";
 import AddIcon from "@mui/icons-material/Add";
 import SettingsIcon from "@mui/icons-material/Settings";
+import SearchIcon from "@mui/icons-material/Search";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import ViewComfyIcon from "@mui/icons-material/ViewComfy";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
 
 export default function ProjectBugs() {
   const params = useParams();
   const router = useRouter();
+
+  const [subtasksFilter, setSubtasksFilter] = React.useState("");
+  const [meFilter, setMeFilter] = React.useState("");
+  const [assigneesFilter, setAssigneesFilter] = React.useState("");
+  const [rowsPerPage, setRowsPerPage] = React.useState("5");
+
+  const handleSubtasksChange = (event: SelectChangeEvent) => {
+    setSubtasksFilter(event.target.value);
+  };
+
+  const handleMeChange = (event: SelectChangeEvent) => {
+    setMeFilter(event.target.value);
+  };
+
+  const handleAssigneesChange = (event: SelectChangeEvent) => {
+    setAssigneesFilter(event.target.value);
+  };
+
+  const handleRowsPerPageChange = (event: SelectChangeEvent) => {
+    setRowsPerPage(event.target.value);
+  };
+
   const bugsData = [
     {
       id: 1,
@@ -157,7 +190,196 @@ export default function ProjectBugs() {
           </Box>
         </Box>
 
-        
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "16px",
+            width: "100%",
+            borderTop: "1px solid #DDE2E4",
+            borderBottom: "1px solid #DDE2E4",
+            padding: "25px 0",
+            margin: "25px 0",
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
+            <TextField
+              placeholder="Search"
+              variant="outlined"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: "6px",
+                  width: "236px",
+                  height: "40px",
+                  "& fieldset": {
+                    borderColor: "#DDE2E4",
+                  },
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <SearchIcon
+                    sx={{
+                      color: "#B0BABF",
+                      marginRight: "8px",
+                      fontSize: "20px",
+                    }}
+                  />
+                ),
+              }}
+            />
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              gap: "16px",
+              justifyContent: "center",
+              flex: 5,
+            }}
+          >
+            <FormControl sx={{ minWidth: 120 }}>
+              <InputLabel
+                sx={{
+                  color: "#252C32",
+                  fontWeight: "400",
+                  fontSize: "14px",
+                  lineHeight: "24px",
+                  letterSpacing: "-0.6%",
+                }}
+              >
+                Subtasks
+              </InputLabel>
+              <Select
+                value={subtasksFilter}
+                label="Subtasks"
+                onChange={handleSubtasksChange}
+                sx={{
+                  color: "#5B6871",
+                  "& fieldset": { border: "none" },
+                }}
+              >
+                <MenuItem value="all">All</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ minWidth: 100 }}>
+              <InputLabel
+                sx={{
+                  color: "#252C32",
+                  fontWeight: "400",
+                  fontSize: "14px",
+                  lineHeight: "24px",
+                  letterSpacing: "-0.6%",
+                }}
+              >
+                Me
+              </InputLabel>
+              <Select
+                value={meFilter}
+                label="Me"
+                onChange={handleMeChange}
+                sx={{
+                  color: "#5B6871",
+                  "& fieldset": { border: "none" },
+                }}
+              >
+                <MenuItem value="all">All</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ minWidth: 120 }}>
+              <InputLabel
+                sx={{
+                  color: "#252C32",
+                  fontWeight: "400",
+                  fontSize: "14px",
+                  lineHeight: "24px",
+                  letterSpacing: "-0.6%",
+                }}
+              >
+                Assignees
+              </InputLabel>
+              <Select
+                value={assigneesFilter}
+                label="Assignees"
+                onChange={handleAssigneesChange}
+                sx={{
+                  color: "#5B6871",
+                  "& fieldset": { border: "none" },
+                }}
+              >
+                <MenuItem value="all">All Assignees</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          <Box sx={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <IconButton
+              sx={{
+                color: "#344054",
+                border: "1px solid #D0D5DD",
+                borderRadius: "8px",
+                width: "32px",
+                height: "32px",
+              }}
+            >
+              <FilterListIcon
+                sx={{ width: "16px", height: "16px", color: "#344054" }}
+              />
+            </IconButton>
+
+            <IconButton
+              sx={{
+                color: "#344054",
+                border: "1px solid #D0D5DD",
+                borderRadius: "8px",
+                width: "32px",
+                height: "32px",
+              }}
+            >
+              <ViewModuleIcon
+                sx={{ width: "16px", height: "16px", color: "#344054" }}
+              />
+            </IconButton>
+
+            <Box sx={{ display: "flex", gap: "0px" }}>
+              <IconButton
+                sx={{
+                  backgroundColor: "#F6F8F9",
+                  color: "#B0BABF",
+                  border: "1px solid #D0D5DD",
+                  borderRadius: "8px",
+                  width: "32px",
+                  height: "32px",
+                }}
+              >
+                <ViewComfyIcon
+                  sx={{ width: "16px", height: "16px", color: "#B0BABF" }}
+                />
+              </IconButton>
+
+              <IconButton
+                sx={{
+                  backgroundColor: "#F6F8F9",
+                  color: "#007DFA",
+                  border: "1px solid #D0D5DD",
+                  borderRadius: "8px",
+                  width: "32px",
+                  height: "32px",
+                }}
+              >
+                <ViewListIcon
+                  sx={{ width: "16px", height: "16px", color: "#007DFA" }}
+                />
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
+
         <TableContainer
           component={Paper}
           sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)", borderRadius: "12px" }}
