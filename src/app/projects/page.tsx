@@ -49,7 +49,7 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
   const [formValues, setFormValues] = useState({
     name: "",
     description: "",
-  });
+  }); 
 
   const [formErrors, setFormErrors] = useState({
     name: "",
