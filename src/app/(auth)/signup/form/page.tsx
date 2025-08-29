@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import {
   Grid,
@@ -13,15 +14,15 @@ import Image from "next/image";
 import signImg from "../../../../../public/images/sign.jpg";
 import PersonIcon from "@mui/icons-material/Person";
 import WorkIcon from "@mui/icons-material/Work";
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
-import SignInputFields from "@/app/components/SignInputFields/page";
-import LockIcon from '@mui/icons-material/Lock'; 
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import SignInputFields from "@/app/components/SignUpInputFields/page";
+import LockIcon from "@mui/icons-material/Lock";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
-const Item = styled(Paper)(({ theme }) => ({
+const Item = styled(Paper)(() => ({
   backgroundColor: "#FFFFFF",
-  padding: theme.spacing(0),
+  padding: 0,
   textAlign: "center",
   height: "100%",
   display: "flex",
@@ -32,73 +33,141 @@ const Item = styled(Paper)(({ theme }) => ({
   position: "relative",
 }));
 
-const StyledButton = styled(Button)(({ theme }) => ({
-  borderRadius: '8px',
-  width: '203px',
-  height: '70px',
-  paddingLeft: '20px',
-  paddingRight: '20px',
-  justifyContent: 'space-between', 
-  textTransform: 'none', 
-  fontWeight: '600',     
-  fontSize: '22px',
-  lineHeight: '100%',
-  verticalAlign: 'middle'
+const StyledButton = styled(Button)(() => ({
+  borderRadius: "8px",
+  width: "203px",
+  height: "70px",
+  paddingLeft: "20px",
+  paddingRight: "20px",
+  justifyContent: "space-between",
+  textTransform: "none",
+  fontWeight: 600,
+  fontSize: "22px",
+  lineHeight: "100%",
+  verticalAlign: "middle",
 }));
 
 export default function SignupForm() {
   const searchParams = useSearchParams();
-  const userType = searchParams.get("type") || "manager";
+  const router = useRouter();
+
+  const initialType = searchParams.get("type") || "manager";
+
+  const displayUserType = initialType.toLowerCase() === "qa" ? "QA" : initialType;
 
   const [formValues, setFormValues] = useState({
     name: "",
-    email:"",
-    password:""
+    user_type: displayUserType, 
+    email: "",
+    password: "",
   });
 
+  const [formErrors, setFormErrors] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const [serverError, setServerError] = useState("");
+
+  const nameRegex = /^[A-Za-z]+( [A-Za-z]+)*$/;
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function validatePassword(pw: string) {
+    if (pw.length < 8) return "Password must be at least 8 characters";
+    if (!/[A-Z]/.test(pw)) return "Password must contain at least one uppercase letter";
+    if (!/[a-z]/.test(pw)) return "Password must contain at least one lowercase letter";
+    if (!/[0-9]/.test(pw)) return "Password must contain at least one digit";
+    if (!/[^A-Za-z0-9]/.test(pw)) return "Password must contain at least one special character";
+    return "";
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues({ ...formValues, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "user_type") return;
+
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+    setServerError("");
+  };
+
+  const validateForm = () => {
+    const errors: any = {};
+
+    if (!formValues.name.trim()) errors.name = "Name is required";
+    else if (!nameRegex.test(formValues.name)) errors.name = "Name must contain only letters and single spaces between words";
+
+    if (!formValues.email.trim()) errors.email = "Email is required";
+    else if (/\s/.test(formValues.email)) errors.email = "Email must not contain spaces";
+    else if (!emailRegex.test(formValues.email)) errors.email = "Invalid email format";
+
+    if (!formValues.password.trim()) errors.password = "Password is required";
+    else {
+      const pwError = validatePassword(formValues.password);
+      if (pwError) errors.password = pwError;
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleEmailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === " ") {
+      e.preventDefault();
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setServerError("");
+
+    if (!validateForm()) return;
+
+    let sendUserType = formValues.user_type.toLowerCase();
+    if (sendUserType === "qa") sendUserType = "QA"; 
+
+    const postData = {
+      name: formValues.name.trim(),
+      email: formValues.email.trim(),
+      password: formValues.password,
+      user_type: sendUserType,
+    };
+
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(postData),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setServerError(data.error || "Signup failed");
+        return;
+      }
+
+      router.push("/projects");
+    } catch (err) {
+      console.error(err);
+      setServerError("Something went wrong. Please try again.");
+    }
   };
 
   return (
-    <Grid container spacing={0} style={{ height: "100vh" }}>
-      <Grid size={4.5} style={{ position: "relative", height: "100vh" }}>
-        <Image
-          src={signImg}
-          alt="SignUp"
-          fill
-          style={{ objectFit: "cover" }}
-          priority
-        />
+    <Grid container spacing={0} sx={{ height: "100vh" }}>
+      <Grid size={5} sx={{ position: "relative", height: "100%" }}>
+        <Image src={signImg} alt="SignUp" fill style={{ objectFit: "cover" }} priority />
       </Grid>
-    
-      <Grid size={7.5}>
+      <Grid size={7}>
         <Item>
-          <Box sx={{ marginTop: "40px", textAlign: "left" }}>
-            <Typography
-              sx={{
-                width: "109px",
-                height: "42px",
-                fontWeight: 700,
-                color: "#2F3367",
-                marginBottom: 2,
-                fontSize: "28px",
-              }}
-            >
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: "40px", textAlign: "left" }}>
+            <Typography sx={{ fontWeight: 700, color: "#2F3367", mb: 2, fontSize: "28px" }}>
               Sign Up
             </Typography>
-
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <Typography
-                sx={{
-                  fontWeight: 500,
-                  color: "#8692A6",
-                  fontSize: "16px",
-                  lineHeight: "28px",
-                  width: "267px",
-                  height: "24px"
-                }}
-              >
+              <Typography sx={{ fontWeight: 500, color: "#8692A6", fontSize: "16px", lineHeight: "28px" }}>
                 Please fill your information below
               </Typography>
 
@@ -109,60 +178,49 @@ export default function SignupForm() {
                 value={formValues.name}
                 onChange={handleChange}
               />
+              {formErrors.name && <Typography sx={{ color: "red", fontSize: 13 }}>{formErrors.name}</Typography>}
+
               <SignInputFields
                 icon={<WorkIcon />}
                 label="User Type"
-                name="userType"
-                value={userType}
-                onChange={handleChange}
+                name="user_type"
+                value={formValues.user_type}
+                onChange={() => {}}
+                inputProps={{ readOnly: true, style: { cursor: "not-allowed" } }}
               />
+
               <SignInputFields
                 icon={<MailOutlineIcon />}
                 label="Email"
                 name="email"
                 value={formValues.email}
                 onChange={handleChange}
+                onKeyDown={handleEmailKeyDown}
               />
+              {formErrors.email && <Typography sx={{ color: "red", fontSize: 13 }}>{formErrors.email}</Typography>}
+
               <SignInputFields
                 icon={<LockIcon />}
                 label="Password"
                 name="password"
                 value={formValues.password}
                 onChange={handleChange}
+                inputProps={{ type: "password" }}
               />
+              {formErrors.password && <Typography sx={{ color: "red", fontSize: 13 }}>{formErrors.password}</Typography>}
 
-              <StyledButton variant="contained" endIcon={<ChevronRightIcon />}>
+              {serverError && <Typography sx={{ color: "red", fontSize: 14 }}>{serverError}</Typography>}
+
+              <StyledButton type="submit" variant="contained" endIcon={<ChevronRightIcon />}>
                 Sign Up
               </StyledButton>
-              
             </Box>
-            <Box sx={{ marginTop:"20px",paddingTop:"20px", borderTop:"1px solid #ECECF0", display: "flex", flexDirection: "row", justifyContent:"space-between", alignItems:"center" }}>
-                <Typography
-              sx={{
-                fontWeight: 500,
-                fontSize: "16px",
-                lineHeight: "100%",
-                letterSpacing: "0%",
-                verticalAlign: "middle",
-                color: "#8692A6"
-              }}
-            >
-              Already have an account?{" "}
-            </Typography>
-             <Link 
-                href="/signin" 
-                sx={{ 
-                  fontWeight: 600,
-                  fontSize: "16px",
-                  lineHeight: "100%",
-                  letterSpacing: "0%",
-                  color: "#007DFA", 
-                  textDecoration: "none",
-                  "&:hover": {
-                    textDecoration: "underline"
-                  }
-                }}
-              >
+
+            <Box sx={{ mt: "20px", pt: "20px", borderTop: "1px solid #ECECF0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Typography sx={{ fontWeight: 500, fontSize: "16px", color: "#8692A6" }}>
+                Already have an account?
+              </Typography>
+              <Link href="/signin" sx={{ fontWeight: 600, fontSize: "16px", color: "#007DFA", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}>
                 Login to your account
               </Link>
             </Box>
@@ -172,3 +230,4 @@ export default function SignupForm() {
     </Grid>
   );
 }
+

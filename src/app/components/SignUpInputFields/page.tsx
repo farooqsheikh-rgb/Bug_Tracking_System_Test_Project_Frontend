@@ -8,15 +8,15 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
   boxShadow: "none",
   "& .MuiOutlinedInput-root": {
     "& fieldset": {
-      border: "none", 
+      border: "none",
     },
     "&.Mui-focused fieldset": {
-      border: "3px solid #80BEFC", 
+      border: "3px solid #80BEFC",
     },
-    color: "#3C4071", 
+    color: "#3C4071",
   },
   "& input": {
-    color: "#3C4071", 
+    color: "#3C4071",
   },
 }));
 
@@ -27,7 +27,7 @@ export interface SignInputFieldsProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-
+  inputProps?: React.InputHTMLAttributes<HTMLInputElement>; 
 }
 
 export default function SignInputFields({
@@ -36,7 +36,8 @@ export default function SignInputFields({
   name,
   value,
   onChange,
-  onKeyDown
+  onKeyDown,
+  inputProps, 
 }: SignInputFieldsProps) {
   return (
     <StyledTextField
@@ -47,12 +48,9 @@ export default function SignInputFields({
       value={value}
       onChange={onChange}
       onKeyDown={onKeyDown}
+      inputProps={inputProps}
       InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            {icon}
-          </InputAdornment>
-        ),
+        startAdornment: <InputAdornment position="start">{icon}</InputAdornment>,
       }}
     />
   );
