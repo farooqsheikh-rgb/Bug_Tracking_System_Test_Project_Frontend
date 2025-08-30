@@ -20,31 +20,39 @@ import ResponsiveAppBar from "../navbar";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import ImageIcon from "@mui/icons-material/Image";
 import projectImg from "../../../public/images/folder.png";
 import manageBugImg from "../../../public/images/manageBug.png";
 import Image from "next/image";
 import PaginationProjects from "../components/PaginationProjects/page";
 import React, { useCallback, useEffect, useState } from "react";
 import { Project } from "@/type/Project";
-import axios from "axios";
-
-type ProjectType = {
-  id: number;
-  name: string;
-  // add other fields as needed
-};
-
+import { useRouter } from "next/navigation";
 
 export default function Projects() {
+  const router = useRouter();
   const [serverError, setServerError] = useState("");
   const [projectsData, setProjectsData] = useState([]);
   const [open, setOpen] = useState(false);
-  const [projectName, setProjectName] = useState("");
-  const [projectDescription, setProjectDescription] = useState("");
-const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  
+  // Sorting and pagination state
+  const [sortField, setSortField] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage] = useState(9);
 
   const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    setOpen(false);
+    // Reset form values and errors when closing
+    setFormValues({ name: "", description: "" });
+    setFormErrors({ name: "", description: "" });
+    setServerError("");
+  };
 
   const [formValues, setFormValues] = useState({
     name: "",
@@ -56,32 +64,55 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
     description: "",
   });
 
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-
-  const fetchProjects = async (searchTerm:string) => {
+  const fetchProjects = async (searchTerm: string) => {
     try {
-      const response = await axios.get("/api/v1/projects/search", {
-        params: { name: searchTerm },
+      setIsSearching(true);
+      let url = "/api/projects";
+      
+      if (searchTerm.trim() !== "") {
+        url += `?name=${encodeURIComponent(searchTerm.trim())}`;
+      }
+
+      const response = await fetch(url, {
+        method: "GET",
+        credentials: "include",
       });
-      setSearchResults(response.data);
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        console.error("Search error:", data.error || "Failed to search projects");
+        return;
+      }
+
+      setProjectsData(data.data || []);
     } catch (err) {
       console.error("Search error", err);
+    } finally {
+      setIsSearching(false);
     }
   };
 
   const debouncedFetchProjects = useCallback(
-    debounce((nextValue) => fetchProjects(nextValue), 300),
+    debounce((nextValue: string) => fetchProjects(nextValue), 300),
     []
   );
 
   useEffect(() => {
-    if (query.trim() !== "") {
-      debouncedFetchProjects(query);
-    } else {
-      setSearchResults([]);
-    }
-  }, [query]);
+    debouncedFetchProjects(searchQuery);
+  }, [searchQuery, debouncedFetchProjects]);
+
+  // Initial load of all projects
+  useEffect(() => {
+    fetchProjects("");
+  }, []);
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    // For now, just update the page number
+    // You can implement the actual API call here later
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -103,10 +134,10 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
     const errors: { name?: string; description?: string } = {};
 
     if (!formValues.name.trim()) {
-      errors.name = "Name is required";
+      errors.name = "Project name is required";
     }
     if (!formValues.description.trim()) {
-      errors.description = "Description is required";
+      errors.description = "Short details are required";
     }
 
     setFormErrors({
@@ -124,47 +155,28 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
       const res = await fetch("/api/projects", {
         method: "POST",
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(formValues),
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setServerError(data?.error || "Login failed");
+        setServerError(data?.error || "Failed to add project");
         return;
       }
+
+      // Close modal and refresh projects list
+      handleClose();
+      // Refresh the projects list
+      fetchProjects(searchQuery);
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Add project error:", err);
       setServerError("Something went wrong. Please try again.");
     }
-    handleClose();
   };
-
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await fetch("/api/projects", {
-          method: "GET",
-          credentials: "include",
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.success) {
-          setServerError(data.error || "Failed to fetch projects");
-          return;
-        }
-
-        setProjectsData(data.data);
-      } catch (err) {
-        setServerError("Something went wrong.");
-        console.error(err);
-      }
-    };
-
-    fetchProjects();
-  },[]);
 
   return (
     <Box
@@ -220,8 +232,8 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
            <TextField
         placeholder="Search for Projects here"
         variant="outlined"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
         sx={{
           width: "336px",
           height: "45px",
@@ -252,7 +264,6 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
         }}
       />
 
-
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -270,62 +281,6 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
           >
             Add New Project
           </Button>
-
-          <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-            <DialogTitle>
-              <Typography
-                variant="h6"
-                component="div"
-                sx={{ textAlign: "left" }}
-              >
-                Add New Project
-              </Typography>
-            </DialogTitle>
-            <DialogContent>
-              <Box display="flex" flexDirection="column" gap={2}>
-                <Box>
-                  <Typography variant="subtitle1">Project Name</Typography>
-                  <TextField
-                    fullWidth
-                    name="name"
-                    variant="outlined"
-                    value={formValues.name}
-                    onChange={handleChange}
-                  />
-                  {formErrors.name && (
-                    <Typography sx={{ color: "red", fontSize: 13 }}>
-                      {formErrors.name}
-                    </Typography>
-                  )}
-                </Box>
-                <Box>
-                  <Typography variant="subtitle1">
-                    Project Description
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    name="description"
-                    variant="outlined"
-                    multiline
-                    minRows={3}
-                    value={formValues.description}
-                    onChange={handleChange}
-                  />
-                  {formErrors.description && (
-                    <Typography sx={{ color: "red", fontSize: 13 }}>
-                      {formErrors.description}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            </DialogContent>
-            <DialogActions sx={{ justifyContent: "flex-start", px: 3, pb: 2 }}>
-              <Button variant="contained" onClick={handleAdd}>
-                Add
-              </Button>
-              <Button onClick={handleClose}>Cancel</Button>
-            </DialogActions>
-          </Dialog>
 
           <FormControl
             sx={{
@@ -389,11 +344,232 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
           </IconButton>
         </Box>
 
-<ul>
-        {searchResults.map((project) => (
-          <li key={project.id}>{project.name}</li>
-        ))}
-      </ul>
+        {/* Add New Project Modal */}
+        <Dialog 
+          open={open} 
+          onClose={handleClose} 
+          maxWidth="md" 
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: "8px",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+            }
+          }}
+        >
+          <DialogTitle sx={{ pb: 1 }}>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{ 
+                textAlign: "left",
+                fontWeight: 600,
+                fontSize: "18px",
+                color: "#000000"
+              }}
+            >
+              Add new Project
+            </Typography>
+          </DialogTitle>
+          
+          <DialogContent sx={{ pt: 2 }}>
+            <Box sx={{ display: "flex", gap: 3 }}>
+              {/* Left Column - Input Fields */}
+              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                <Box>
+                  <Typography 
+                    variant="subtitle1" 
+                    sx={{ 
+                      fontWeight: 500, 
+                      color: "#000000",
+                      mb: 1,
+                      fontSize: "14px"
+                    }}
+                  >
+                    Project name
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    name="name"
+                    variant="outlined"
+                    placeholder="Enter project name"
+                    value={formValues.name}
+                    onChange={handleChange}
+                    error={!!formErrors.name}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "5px",
+                        "& fieldset": {
+                          borderColor: formErrors.name ? "#d32f2f" : "#E0E0E0",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: formErrors.name ? "#d32f2f" : "#BDBDBD",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: formErrors.name ? "#d32f2f" : "#007DFA",
+                        },
+                      },
+                    }}
+                  />
+                  {formErrors.name && (
+                    <Typography sx={{ color: "#d32f2f", fontSize: "12px", mt: 0.5 }}>
+                      {formErrors.name}
+                    </Typography>
+                  )}
+                </Box>
+                
+                <Box>
+                  <Typography 
+                    variant="subtitle1"
+                    sx={{ 
+                      fontWeight: 500, 
+                      color: "#000000",
+                      mb: 1,
+                      fontSize: "14px"
+                    }}
+                  >
+                    Short details
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    name="description"
+                    variant="outlined"
+                    placeholder="Enter details here"
+                    value={formValues.description}
+                    onChange={handleChange}
+                    error={!!formErrors.description}
+                    multiline
+                    minRows={3}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "5px",
+                        "& fieldset": {
+                          borderColor: formErrors.description ? "#d32f2f" : "#E0E0E0",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: formErrors.description ? "#d32f2f" : "#BDBDBD",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: formErrors.description ? "#d32f2f" : "#007DFA",
+                        },
+                      },
+                    }}
+                  />
+                  {formErrors.description && (
+                    <Typography sx={{ color: "#d32f2f", fontSize: "12px", mt: 0.5 }}>
+                      {formErrors.description}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              {/* Right Column - Image Upload Area */}
+              <Box sx={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <Box
+                  sx={{
+                    width: "200px",
+                    height: "200px",
+                    border: "2px dashed #E0E0E0",
+                    borderRadius: "8px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      borderColor: "#007DFA",
+                      backgroundColor: "#F8F9FA",
+                    },
+                  }}
+                >
+                  <ImageIcon 
+                    sx={{ 
+                      fontSize: "48px", 
+                      color: "#6E6F72",
+                      mb: 1
+                    }} 
+                  />
+                  <Typography
+                    sx={{
+                      fontSize: "14px",
+                      color: "#6E6F72",
+                      textAlign: "center",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Upload project photo
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+
+            {serverError && (
+              <Typography sx={{ color: "#d32f2f", fontSize: "14px", mt: 2, textAlign: "center" }}>
+                {serverError}
+              </Typography>
+            )}
+          </DialogContent>
+          
+          <DialogActions sx={{ justifyContent: "flex-start", px: 3, pb: 3, gap: 2 }}>
+            <Button 
+              variant="contained" 
+              onClick={handleAdd}
+              sx={{
+                backgroundColor: "#007DFA",
+                color: "#FFFFFF",
+                textTransform: "none",
+                borderRadius: "5px",
+                fontWeight: 500,
+                fontSize: "14px",
+                px: 3,
+                py: 1,
+                "&:hover": {
+                  backgroundColor: "#0056CC",
+                },
+              }}
+            >
+              Add
+            </Button>
+            <Button 
+              onClick={handleClose}
+              sx={{
+                color: "#6E6F72",
+                textTransform: "none",
+                borderRadius: "5px",
+                fontWeight: 500,
+                fontSize: "14px",
+                px: 3,
+                py: 1,
+                border: "1px solid #E0E0E0",
+                "&:hover": {
+                  backgroundColor: "#F5F5F5",
+                  borderColor: "#BDBDBD",
+                },
+              }}
+            >
+              Cancel
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Search Results or All Projects */}
+        {isSearching && (
+          <Box sx={{ textAlign: "center", py: 2 }}>
+            <Typography sx={{ color: "#6E6F72" }}>
+              Searching...
+            </Typography>
+          </Box>
+        )}
+
+        {!isSearching && projectsData.length === 0 && searchQuery.trim() !== "" && (
+          <Box sx={{ textAlign: "center", py: 4 }}>
+            <Typography sx={{ color: "#6E6F72" }}>
+              No projects found matching &quot;{searchQuery}&quot;
+            </Typography>
+          </Box>
+        )}
+
         <Box
           sx={{
             display: "grid",
@@ -412,7 +588,7 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
                 cursor: "pointer",
               }}
               onClick={() => {
-                window.location.href = `/projects/${item.id}`;
+                router.push(`/projects/${item.id}`);
               }}
             >
               <CardContent
@@ -505,7 +681,13 @@ const [searchResults, setSearchResults] = useState<ProjectType[]>([]);
           ))}
         </Box>
 
-        <PaginationProjects />
+        <PaginationProjects 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          totalItems={totalItems} 
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange} 
+        />
       </Box>
     </Box>
   );

@@ -25,8 +25,9 @@ import ResponsiveAppBar from "../../navbar";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { useRouter, useParams } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PaginationBugs from "@/app/components/PaginationBugs/page";
+import BugActionsDialog from "@/app/components/BugActionsDialog/page";
 import AddIcon from "@mui/icons-material/Add";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SearchIcon from "@mui/icons-material/Search";
@@ -39,10 +40,32 @@ export default function ProjectBugs() {
   const params = useParams();
   const router = useRouter();
 
+  const [userRole, setUserRole] = React.useState<"manager" | "QA" | "developer">("developer");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogAnchorEl, setDialogAnchorEl] = React.useState<HTMLElement | null>(null);
+  const [selectedBugId, setSelectedBugId] = React.useState<number | null>(null);
   const [subtasksFilter, setSubtasksFilter] = React.useState("");
   const [meFilter, setMeFilter] = React.useState("");
-  const [assigneesFilter, setAssigneesFilter] = React.useState("");
+  const [assigneesFilter, setAssigneesFilter] = useState("");
   const [rowsPerPage, setRowsPerPage] = React.useState("5");
+  const [bugsData, setBugsData] = useState<any[]>([]);
+  const [projectData, setProjectData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [updatingBugId, setUpdatingBugId] = useState<number | null>(null);
+  const [deletingBugId, setDeletingBugId] = useState<number | null>(null);
+
+  // Debug effect to log user role changes
+  useEffect(() => {
+    console.log('User role state changed to:', userRole);
+    console.log('Current user role for dialog:', userRole);
+  }, [userRole]);
+
+  // Debug effect to log project data changes
+  useEffect(() => {
+    console.log('Project data state changed to:', projectData);
+    console.log('Project name from state:', projectData?.name);
+  }, [projectData]);
 
   const handleSubtasksChange = (event: SelectChangeEvent) => {
     setSubtasksFilter(event.target.value);
@@ -60,28 +83,234 @@ export default function ProjectBugs() {
     setRowsPerPage(event.target.value);
   };
 
-  const bugsData = [
-    {
-      id: 1,
-      description: "Convert the audio file received from Mobile app into text",
-      status: "Pending",
-      statusColor: "#f44336",
-      chipColor: "#FDF2F2",
-      dueDate: "2024-03-15",
-      assignedTo: ["Hassan"],
-      priority: "High",
-    },
-    {
-      id: 2,
-      description: "Fix the login authentication issue in the web application",
-      status: "In progress",
-      statusColor: "#2196f3",
-      chipColor: "#EEF3FF",
-      dueDate: "2024-03-20",
-      assignedTo: ["Ali"],
-      priority: "Medium",
-    },
-  ];
+  // Function to get user type from cookies
+  const getUserTypeFromCookies = () => {
+    try {
+      const cookies = document.cookie.split(';');
+      console.log('All cookies:', cookies);
+      
+      // First try to get user type from the dedicated cookie
+      const userTypeCookie = cookies.find(cookie => cookie.trim().startsWith('userType='));
+      if (userTypeCookie) {
+        const userType = userTypeCookie.split('=')[1];
+        console.log('User type from cookie:', userType);
+        return userType;
+      }
+      
+      // Fallback: try to get from accessToken if available
+      const accessTokenCookie = cookies.find(cookie => cookie.trim().startsWith('accessToken='));
+      if (accessTokenCookie) {
+        try {
+          const token = accessTokenCookie.split('=')[1];
+          console.log('Raw token:', token);
+          
+          // Decode the JWT payload
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          console.log('Decoded payload:', payload);
+          
+          // Check for different possible field names
+          const userType = payload.user_type || payload.userType || payload.role || payload.type || 'developer';
+          console.log('Extracted user type from token:', userType);
+          
+          return userType;
+        } catch (tokenError) {
+          console.error('Error parsing token:', tokenError);
+        }
+      }
+      
+      console.log('No user type cookie or valid token found');
+      return 'developer';
+    } catch (error) {
+      console.error('Error getting user type from cookies:', error);
+      return 'developer';
+    }
+  };
+
+  // Fetch project and bugs data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const projectId = params.id;
+
+        // Set user role from cookies
+        const userType = getUserTypeFromCookies();
+        console.log('User type from cookies:', userType);
+        console.log('Setting user role to:', userType);
+        setUserRole(userType as "manager" | "QA" | "developer");
+
+        // Fetch project details
+        const projectResponse = await fetch(`/api/projects/${projectId}`, {
+          credentials: "include",
+        });
+        const projectResult = await projectResponse.json();
+
+        console.log('Project response:', projectResult);
+        console.log('Project response success:', projectResult.success);
+        console.log('Project data:', projectResult.data);
+        console.log('Project name:', projectResult.data?.name);
+
+        if (projectResult.success) {
+          setProjectData(projectResult.data);
+          console.log('Project data set to state:', projectResult.data);
+        } else {
+          setError("Failed to fetch project details");
+          return;
+        }
+
+        // Fetch bugs for the project
+        const bugsResponse = await fetch(`/api/bugs/project/${projectId}`, {
+          credentials: "include",
+        });
+        const bugsResult = await bugsResponse.json();
+
+        console.log('Bugs response:', bugsResult);
+
+        if (bugsResult.success) {
+          setBugsData(bugsResult.data || []);
+        } else {
+          setError("Failed to fetch bugs");
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchData();
+    }
+  }, [params.id]);
+
+  // Helper functions for status colors
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "new":
+        return "#f44336"; // Red
+      case "started":
+        return "#2196f3"; // Blue
+      case "resolved":
+        return "#4caf50"; // Green
+      case "completed":
+        return "#4caf50"; // Green
+      default:
+        return "#6E6F72";
+    }
+  };
+
+  const getStatusChipColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "new":
+        return "#FDF2F2"; // Light red
+      case "started":
+        return "#EEF3FF"; // Light blue
+      case "resolved":
+        return "#F0F9F0"; // Light green
+      case "completed":
+        return "#F0F9F0"; // Light green
+      default:
+        return "#F5F5F5";
+    }
+  };
+
+  // Dialog handlers
+  const handleActionsClick = (event: React.MouseEvent<HTMLElement>, bugId: number) => {
+    const bug = bugsData.find(b => b.id === bugId);
+    console.log('Opening dialog for bug:', bug);
+    console.log('Bug type:', bug?.type);
+    console.log('Bug status:', bug?.status);
+    setDialogAnchorEl(event.currentTarget);
+    setSelectedBugId(bugId);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setDialogAnchorEl(null);
+    setSelectedBugId(null);
+  };
+
+  // API handlers for bug operations
+  const handleStatusChange = async (bugId: number, newStatus: string) => {
+    try {
+      setUpdatingBugId(bugId);
+      
+      // Call backend API to update bug status
+      const response = await fetch(`/api/bugs/${bugId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update bug status');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update local state
+        setBugsData(prevBugs => 
+          prevBugs.map(bug => 
+            bug.id === bugId 
+              ? { 
+                  ...bug, 
+                  status: newStatus,
+                  statusColor: getStatusColor(newStatus),
+                  chipColor: getStatusChipColor(newStatus)
+                }
+              : bug
+          )
+        );
+        console.log('Bug status updated successfully');
+      } else {
+        throw new Error(result.message || 'Failed to update bug status');
+      }
+      
+    } catch (error) {
+      console.error('Error updating bug status:', error);
+      alert('Failed to update bug status. Please try again.');
+    } finally {
+      setUpdatingBugId(null);
+    }
+  };
+
+  const handleDeleteBug = async (bugId: number) => {
+    try {
+      setDeletingBugId(bugId);
+      
+      // Call backend API to delete bug
+      const response = await fetch(`/api/bugs/${bugId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete bug');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update local state
+        setBugsData(prevBugs => prevBugs.filter(bug => bug.id !== bugId));
+        console.log('Bug deleted successfully');
+      } else {
+        throw new Error(result.message || 'Failed to delete bug');
+      }
+      
+    } catch (error) {
+      console.error('Error deleting bug:', error);
+      alert('Failed to delete bug. Please try again.');
+    } finally {
+      setDeletingBugId(null);
+    }
+  };
 
   return (
     <Box
@@ -102,11 +331,16 @@ export default function ProjectBugs() {
               color: "#5B6871",
               lineHeight: "16px",
               marginBottom: "5px",
+              cursor: "pointer",
             }}
             onClick={() => router.push("/projects")}
           >
             Projects &gt;{" "}
-            <span style={{ color: "#000000" }}>Android UI System</span>
+            <span style={{ color: "#000000" }}>
+              {projectData ? projectData.name : "Loading..."}
+            </span>
+            {projectData && <span style={{ fontSize: "10px", color: "#666" }}> (Debug: {JSON.stringify(projectData)})</span>}
+            {!projectData && <span style={{ fontSize: "10px", color: "#666" }}> (No project data)</span>}
           </Typography>
 
           <Box
@@ -138,6 +372,9 @@ export default function ProjectBugs() {
                   borderRadius: "4.24px",
                 }}
               />
+              <Typography variant="caption" sx={{ color: "#666", ml: 1 }}>
+                (Role: {userRole})
+              </Typography>
             </Box>
 
             <Box sx={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -410,6 +647,17 @@ export default function ProjectBugs() {
                     letterSpacing: "0.18px",
                   }}
                 >
+                  STATE
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: 600,
+                    color: "#3A3541DE",
+                    fontSize: "12.36px",
+                    lineHeight: "24.72px",
+                    letterSpacing: "0.18px",
+                  }}
+                >
                   STATUS
                 </TableCell>
                 <TableCell
@@ -448,95 +696,168 @@ export default function ProjectBugs() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {bugsData.map((bug) => (
-                <TableRow
-                  key={bug.id}
-                  sx={{ "&:hover": { backgroundColor: "#f8f9fa" } }}
-                >
-                  <TableCell>
-                    <Checkbox sx={{ width: "18.54px", height: "18.54px" }} />
-                  </TableCell>
-                  <TableCell>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: "10px",
-                          height: "10px",
-                          borderRadius: "6px",
-                          backgroundColor: bug.statusColor,
-                        }}
-                      />
-                      <Typography
-                        sx={{
-                          fontWeight: "400",
-                          fontSize: "14.36px",
-                          color: "#3A3541AD",
-                        }}
-                      >
-                        {bug.description}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={bug.status}
-                      sx={{
-                        backgroundColor: bug.chipColor,
-                        color: bug.statusColor,
-                        fontSize: "12.72px",
-                        lineHeight: "25.45px",
-                        fontWeight: 500,
-                        borderRadius: "6.36px",
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <CalendarTodayIcon
-                      sx={{ color: "#D0D5DD", width: "21px", height: "21px" }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {bug.assignedTo.map((user, index) => (
-                        <Avatar
-                          key={index}
-                          sx={{
-                            width: "25.45px",
-                            height: "25.45px",
-                            fontSize: "14px",
-                            fontWeight: "bold",
-                            backgroundColor: "#000000ff",
-                          }}
-                        >
-                          {user.charAt(0)}
-                        </Avatar>
-                      ))}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      sx={{
-                        color: "#3A35418A",
-                        width: "4.12px",
-                        height: "16.48px",
-                      }}
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} sx={{ textAlign: "center", py: 4 }}>
+                    <Typography>Loading bugs...</Typography>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={6} sx={{ textAlign: "center", py: 4 }}>
+                    <Typography color="error">{error}</Typography>
+                  </TableCell>
+                </TableRow>
+              ) : bugsData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} sx={{ textAlign: "center", py: 4 }}>
+                    <Typography>No bugs found for this project</Typography>
+                    {bugsData && <Typography variant="caption" sx={{ display: "block", mt: 1 }}>Debug: {JSON.stringify(bugsData)}</Typography>}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                bugsData.map((bug) => (
+                  <TableRow
+                    key={bug.id}
+                    sx={{ "&:hover": { backgroundColor: "#f8f9fa" } }}
+                  >
+                    <TableCell>
+                      <Checkbox sx={{ width: "18.54px", height: "18.54px" }} />
+                    </TableCell>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: "6px",
+                            backgroundColor: getStatusColor(bug.status),
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontWeight: "400",
+                            fontSize: "14.36px",
+                            color: "#3A3541AD",
+                          }}
+                        >
+                          {bug.title}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: "400",
+                            fontSize: "14.36px",
+                            color: "#3A3541AD",
+                          }}
+                        >
+                          {bug.type}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={bug.status}
+                        sx={{
+                          backgroundColor: getStatusChipColor(bug.status),
+                          color: getStatusColor(bug.status),
+                          fontSize: "12.72px",
+                          lineHeight: "25.45px",
+                          fontWeight: 500,
+                          borderRadius: "6.36px",
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <CalendarTodayIcon
+                        sx={{ color: "#D0D5DD", width: "21px", height: "21px" }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                                                {bug.assignedDevelopers && bug.assignedDevelopers.length > 0 ? (
+                          bug.assignedDevelopers.map((user: any, index: number) => (
+                            <Avatar
+                              key={index}
+                              sx={{
+                                width: "25.45px",
+                                height: "25.45px",
+                                fontSize: "14px",
+                                fontWeight: "bold",
+                                backgroundColor: "#000000ff",
+                              }}
+                            >
+                              {user.name.charAt(0)}
+                            </Avatar>
+                          ))
+                        ) : (
+                          <Typography sx={{ fontSize: "12px", color: "#6E6F72" }}>
+                            Unassigned
+                          </Typography>
+                        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <IconButton
+                        onClick={(event) => handleActionsClick(event, bug.id)}
+                        disabled={updatingBugId === bug.id || deletingBugId === bug.id}
+                        sx={{
+                          color: "#3A35418A",
+                          width: "4.12px",
+                          height: "16.48px",
+                          opacity: (updatingBugId === bug.id || deletingBugId === bug.id) ? 0.5 : 1,
+                        }}
+                      >
+                        <MoreVertIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
       </Box>
+      
+      {/* Bug Actions Dialog */}
+      <BugActionsDialog
+        open={dialogOpen}
+        anchorEl={dialogAnchorEl}
+        onClose={handleDialogClose}
+        userRole={userRole}
+        bugId={selectedBugId || 0}
+        bugType={bugsData.find(bug => bug.id === selectedBugId)?.type || "bug"}
+        onStatusChange={handleStatusChange}
+        onDelete={handleDeleteBug}
+        isUpdating={updatingBugId === selectedBugId}
+        isDeleting={deletingBugId === selectedBugId}
+      />
+      {/* Debug info */}
+      {selectedBugId && (
+        <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: '#f0f0f0', padding: '10px', fontSize: '12px', zIndex: 9999 }}>
+          <div>Selected Bug ID: {selectedBugId}</div>
+          <div>Bug Type: {bugsData.find(bug => bug.id === selectedBugId)?.type || "unknown"}</div>
+          <div>User Role: {userRole}</div>
+        </div>
+      )}
+      
       <PaginationBugs />
     </Box>
   );
 }
+     

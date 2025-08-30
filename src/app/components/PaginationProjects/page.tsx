@@ -1,3 +1,4 @@
+"use client";
 import {
   Box,
   Button,
@@ -9,7 +10,26 @@ import {
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
-export default function PaginationProjects() {
+interface PaginationProjectsProps {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
+}
+
+export default function PaginationProjects({
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+  onItemsPerPageChange
+}: PaginationProjectsProps) {
+  const startItem = ((currentPage - 1) * itemsPerPage) + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
   return (
     <Box
       sx={{
@@ -38,7 +58,7 @@ export default function PaginationProjects() {
             lineHeight: "22px",
           }}
         >
-          Showing 1 to 10 of 50 entries
+          Showing {startItem} to {endItem} of {totalItems} entries
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -54,7 +74,8 @@ export default function PaginationProjects() {
           </Typography>
           <FormControl>
             <Select
-              value="10"
+              value={itemsPerPage}
+              onChange={(e) => onItemsPerPageChange?.(Number(e.target.value))}
               IconComponent={KeyboardArrowDownIcon}
               sx={{
                 borderRadius: "4px",
@@ -62,15 +83,17 @@ export default function PaginationProjects() {
                 height: "30px",
               }}
             >
-              <MenuItem value="10">10</MenuItem>
+              <MenuItem value={9}>9</MenuItem>
             </Select>
           </FormControl>
 
           <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <IconButton
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
               sx={{
-                backgroundColor: "#DFDFDF",
-                color: "#343A40",
+                backgroundColor: currentPage === 1 ? "#F5F5F5" : "#DFDFDF",
+                color: currentPage === 1 ? "#BDBDBD" : "#343A40",
                 width: "30px",
                 height: "30px",
                 borderRadius: "2px",
@@ -82,30 +105,36 @@ export default function PaginationProjects() {
             </IconButton>
 
             <Box sx={{ display: "flex", gap: "4px" }}>
-              {[1, 2, 3, 4].map((page) => (
-                <Button
-                  key={page}
-                  variant={page === 1 ? "contained" : "text"}
-                  size="small"
-                  sx={{
-                    minWidth: "30px",
-                    height: "30px",
-                    borderRadius: "4px",
-                    backgroundColor: page === 1 ? "#007DFA" : "transparent",
-                    color: page === 1 ? "#FFFFFF" : "#6C757D",
-                    fontWeight: 400,
-                    fontSize: "14px",
-                  }}
-                >
-                  {page}
-                </Button>
-              ))}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === currentPage ? "contained" : "text"}
+                    size="small"
+                    onClick={() => onPageChange(pageNum)}
+                    sx={{
+                      minWidth: "30px",
+                      height: "30px",
+                      borderRadius: "4px",
+                      backgroundColor: pageNum === currentPage ? "#007DFA" : "transparent",
+                      color: pageNum === currentPage ? "#FFFFFF" : "#6C757D",
+                      fontWeight: 400,
+                      fontSize: "14px",
+                    }}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
             </Box>
 
             <IconButton
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
               sx={{
-                backgroundColor: "#DFDFDF",
-                color: "#343A40",
+                backgroundColor: currentPage === totalPages ? "#F5F5F5" : "#DFDFDF",
+                color: currentPage === totalPages ? "#BDBDBD" : "#343A40",
                 width: "30px",
                 height: "30px",
                 borderRadius: "2px",
