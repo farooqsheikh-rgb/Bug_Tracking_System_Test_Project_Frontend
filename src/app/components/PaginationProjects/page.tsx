@@ -27,8 +27,8 @@ export default function PaginationProjects({
   onPageChange,
   onItemsPerPageChange
 }: PaginationProjectsProps) {
-  const startItem = ((currentPage - 1) * itemsPerPage) + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  const startItem = totalItems > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0;
+  const endItem = totalItems > 0 ? Math.min(currentPage * itemsPerPage, totalItems) : 0;
 
   return (
     <Box
@@ -83,7 +83,10 @@ export default function PaginationProjects({
                 height: "30px",
               }}
             >
+              <MenuItem value={6}>6</MenuItem>
               <MenuItem value={9}>9</MenuItem>
+              <MenuItem value={12}>12</MenuItem>
+              <MenuItem value={15}>15</MenuItem>
             </Select>
           </FormControl>
 
@@ -105,7 +108,7 @@ export default function PaginationProjects({
             </IconButton>
 
             <Box sx={{ display: "flex", gap: "4px" }}>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              {totalPages > 0 && Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const pageNum = i + 1;
                 return (
                   <Button

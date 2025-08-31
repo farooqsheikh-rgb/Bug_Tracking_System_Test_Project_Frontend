@@ -25,14 +25,12 @@ export async function GET(req: NextRequest) {
 
     let url = "http://localhost:8000/api/v1/projects";
     
-    // Build query parameters
     const queryParams = new URLSearchParams();
     queryParams.append('sort', sort);
     queryParams.append('order', order);
     queryParams.append('page', page);
     queryParams.append('limit', limit);
     
-    // If search parameter is provided, use the search endpoint
     if (searchName) {
       url = `http://localhost:8000/api/v1/projects/search`;
       queryParams.append('name', searchName);
@@ -60,7 +58,6 @@ export async function GET(req: NextRequest) {
       fullError: error
     });
     
-    // Try to extract the actual error message from different possible structures
     let errorMessage = "Failed to fetch projects";
     
     if (error.response?.data?.message) {
@@ -101,20 +98,16 @@ export async function POST(req: NextRequest) {
     });
 
     const data = response.data;
+    console.log("Backend project creation response:", data);
 
     if (!data.success) {
       return NextResponse.json(
-        { success: false, error: "Creating Project failed" },
+        { success: false, error: data.message || "Creating Project failed" },
         { status: 400 }
       );
     }
 
-    const projectData = data.data;
-    const accessToken = projectData.accessToken;
-
-    const res = NextResponse.json({ success: true, project: projectData });
-
-    return res;
+    return NextResponse.json(data);
   } catch (error: any) {
     return NextResponse.json(
       {

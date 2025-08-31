@@ -4,22 +4,20 @@ export async function POST(req: NextRequest) {
   try {
     const res = NextResponse.json({ success: true, message: "Signed out successfully" });
 
-    // Clear the accessToken cookie
     res.cookies.set("accessToken", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 0, // Expire immediately
+      maxAge: 0, 
     });
 
-    // Clear the userType cookie
     res.cookies.set("userType", "", {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 0, // Expire immediately
+      maxAge: 0, 
     });
 
     return res;

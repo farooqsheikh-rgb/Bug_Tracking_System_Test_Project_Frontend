@@ -33,7 +33,6 @@ export async function PATCH(
       );
     }
 
-    // Try to update the bug status
     try {
       console.log('Frontend API - Sending request to backend:', `http://localhost:8000/api/v1/bugs/${bugId}/status`);
       console.log('Frontend API - Request payload:', { status });
@@ -56,7 +55,6 @@ export async function PATCH(
       console.error('Backend error response:', error.response?.data);
       console.error('Backend error status:', error.response?.status);
       
-      // Handle different error scenarios
       if (error.response?.status === 403) {
         return NextResponse.json(
           { 
@@ -83,7 +81,6 @@ export async function PATCH(
         );
       }
       
-      // Re-throw other errors
       throw error;
     }
   } catch (error: unknown) {

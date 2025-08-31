@@ -6,7 +6,6 @@ import {
   Typography,
   Box,
   Link,
-  Button,
 } from "@mui/material";
 import Image from "next/image";
 import signImg from "../../../../public/images/sign.jpg";
@@ -16,6 +15,7 @@ import WorkIcon from "@mui/icons-material/Work";
 import { VerifiedUser } from "@mui/icons-material";
 import { UserTypeSelectionCardProps } from "../../../../interfaces/UserTypeSelectionCardProps";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "#FFFFFF",
@@ -52,10 +52,12 @@ const cardsData: UserTypeSelectionCardProps[] = [
 ];
 
 export default function Signup() {
+  const router = useRouter();
   const [selectedType, setSelectedType] = useState<string>("manager");
 
   const handleCardSelect = (type: string) => {
     setSelectedType(type);
+    router.push(`/signup/form?type=${type}`);
   };
 
   return (

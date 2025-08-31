@@ -16,7 +16,18 @@ export async function GET(
       );
     }
 
-    const response = await axios.get(`http://localhost:8000/api/v1/bugs/project/${projectId}`, {
+    const { searchParams } = new URL(request.url);
+    const page = searchParams.get('page') || '1';
+    const limit = searchParams.get('limit') || '10';
+    const title = searchParams.get('title') || '';
+
+    let backendUrl = `http://localhost:8000/api/v1/bugs/project/${projectId}?page=${page}&limit=${limit}`;
+    
+    if (title.trim() !== '') {
+      backendUrl += `&title=${encodeURIComponent(title.trim())}`;
+    }
+
+    const response = await axios.get(backendUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

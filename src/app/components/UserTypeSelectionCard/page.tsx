@@ -8,9 +8,9 @@ import Avatar from "@mui/material/Avatar";
 import { Grid, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { useRouter } from "next/navigation";
-
-const StyledCard = styled(Card)<{ isSelected: boolean }>(({ theme, isSelected }) => ({
+const StyledCard = styled(Card, {
+  shouldForwardProp: (prop) => prop !== 'isSelected'
+})<{ isSelected: boolean }>(({ theme, isSelected }) => ({
   width: "426px",
   height: "108px",
   top: "405px",
@@ -25,7 +25,9 @@ const StyledCard = styled(Card)<{ isSelected: boolean }>(({ theme, isSelected })
   },
 }));
 
-const StyledAvatar = styled(Avatar)<{ isSelected: boolean }>(({ theme, isSelected }) => ({
+const StyledAvatar = styled(Avatar, {
+  shouldForwardProp: (prop) => prop !== 'isSelected'
+})<{ isSelected: boolean }>(({ theme, isSelected }) => ({
   backgroundColor: isSelected ? "#007DFA" : "#F1F5F9",
   width: "52px",
   height: "52px",
@@ -50,11 +52,6 @@ export default function UserTypeSelectionCard({
   isSelected,
   onSelect,
 }: UserTypeSelectionCardProps) {
-    const router = useRouter();
-
-    const handleContinue = () => {
-    router.push(`/signup/form?type=${type}`);
-  };
   return (
     <StyledCard isSelected={isSelected}>
       <CardActionArea onClick={onSelect} sx={{ height: "100%" }}>
@@ -107,13 +104,11 @@ export default function UserTypeSelectionCard({
 
             <Grid size={3}>
               <Box
-                onClick={handleContinue} 
                 sx={{
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  height: "100%",
-                  cursor: "pointer" 
+                  height: "100%"
                 }}
               >
                 {isSelected && (

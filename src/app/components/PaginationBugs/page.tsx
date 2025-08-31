@@ -1,6 +1,6 @@
+"use client";
 import {
   Box,
-  Button,
   FormControl,
   IconButton,
   MenuItem,
@@ -11,12 +11,30 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import React from "react";
 
-export default function PaginationProjects() {
-  const [rowsPerPage, setRowsPerPage] = React.useState("5");
+interface PaginationBugsProps {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
+}
+
+export default function PaginationBugs({
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+  onItemsPerPageChange
+}: PaginationBugsProps) {
+  const startItem = totalItems > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0;
+  const endItem = totalItems > 0 ? Math.min(currentPage * itemsPerPage, totalItems) : 0;
 
   const handleRowsPerPageChange = (event: SelectChangeEvent) => {
-    setRowsPerPage(event.target.value);
+    onItemsPerPageChange?.(Number(event.target.value));
   };
+
   return (
     <Box
       sx={{
@@ -45,7 +63,7 @@ export default function PaginationProjects() {
             lineHeight: "22px",
           }}
         >
-          Showing 1 to 10 of 50 entries
+          Showing {startItem} to {endItem} of {totalItems} entries
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -60,7 +78,7 @@ export default function PaginationProjects() {
               sx={{ minWidth: "38px", height: "24px" }}
             >
               <Select
-                value={rowsPerPage}
+                value={itemsPerPage.toString()}
                 onChange={handleRowsPerPageChange}
                 sx={{
                   fontSize: "14px",
@@ -78,14 +96,17 @@ export default function PaginationProjects() {
 
           <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Typography sx={{ fontSize: "14px", color: "#3A3541DE", fontWeight: "400", lineHeight: "143%", letterSpacing: "0.15px" }}>
-              1-5 of 6
+              {startItem}-{endItem} of {totalItems}
             </Typography>
 
             <IconButton
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
               sx={{
-                color: "#3A35418A",
+                color: currentPage === 1 ? "#3A35418A" : "#3A35418A",
                 width: "7.41px", 
-                height: "12px"
+                height: "12px",
+                opacity: currentPage === 1 ? 0.5 : 1,
               }}
             >
               <KeyboardArrowDownIcon
@@ -94,10 +115,13 @@ export default function PaginationProjects() {
             </IconButton>
 
             <IconButton
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
               sx={{
-                color: "#3A35418A",
+                color: currentPage === totalPages ? "#3A35418A" : "#3A35418A",
                 width: "7.41px", 
-                height: "12px"
+                height: "12px",
+                opacity: currentPage === totalPages ? 0.5 : 1,
               }}
             >
               <KeyboardArrowDownIcon

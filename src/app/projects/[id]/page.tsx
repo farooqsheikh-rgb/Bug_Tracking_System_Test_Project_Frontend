@@ -20,14 +20,17 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
+  Tooltip,
 } from "@mui/material";
 import ResponsiveAppBar from "../../navbar";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { useRouter, useParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { debounce } from "lodash";
 import PaginationBugs from "@/app/components/PaginationBugs/page";
 import BugActionsDialog from "@/app/components/BugActionsDialog/page";
+import AddBugDialog from "@/app/components/AddBugDialog/page";
 import AddIcon from "@mui/icons-material/Add";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SearchIcon from "@mui/icons-material/Search";
@@ -35,6 +38,30 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import ViewComfyIcon from "@mui/icons-material/ViewComfy";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
+
+interface Bug {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  type: string;
+  deadline: string;
+  screenshot?: string;
+  assignedDevelopers?: User[];
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  user_type: string;
+}
+
+interface Project {
+  id: number;
+  name: string;
+  description: string;
+}
 
 export default function ProjectBugs() {
   const params = useParams();
@@ -44,24 +71,29 @@ export default function ProjectBugs() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogAnchorEl, setDialogAnchorEl] = React.useState<HTMLElement | null>(null);
   const [selectedBugId, setSelectedBugId] = React.useState<number | null>(null);
+  const [addBugDialogOpen, setAddBugDialogOpen] = useState(false);
+  const [deadlineToggles, setDeadlineToggles] = useState<{ [key: number]: boolean }>({});
   const [subtasksFilter, setSubtasksFilter] = React.useState("");
   const [meFilter, setMeFilter] = React.useState("");
   const [assigneesFilter, setAssigneesFilter] = useState("");
-  const [rowsPerPage, setRowsPerPage] = React.useState("5");
-  const [bugsData, setBugsData] = useState<any[]>([]);
-  const [projectData, setProjectData] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [bugsData, setBugsData] = useState<Bug[]>([]);
+  const [projectData, setProjectData] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingBugId, setUpdatingBugId] = useState<number | null>(null);
   const [deletingBugId, setDeletingBugId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Debug effect to log user role changes
   useEffect(() => {
     console.log('User role state changed to:', userRole);
     console.log('Current user role for dialog:', userRole);
   }, [userRole]);
 
-  // Debug effect to log project data changes
   useEffect(() => {
     console.log('Project data state changed to:', projectData);
     console.log('Project name from state:', projectData?.name);
@@ -79,17 +111,11 @@ export default function ProjectBugs() {
     setAssigneesFilter(event.target.value);
   };
 
-  const handleRowsPerPageChange = (event: SelectChangeEvent) => {
-    setRowsPerPage(event.target.value);
-  };
-
-  // Function to get user type from cookies
   const getUserTypeFromCookies = () => {
     try {
       const cookies = document.cookie.split(';');
       console.log('All cookies:', cookies);
       
-      // First try to get user type from the dedicated cookie
       const userTypeCookie = cookies.find(cookie => cookie.trim().startsWith('userType='));
       if (userTypeCookie) {
         const userType = userTypeCookie.split('=')[1];
@@ -97,18 +123,15 @@ export default function ProjectBugs() {
         return userType;
       }
       
-      // Fallback: try to get from accessToken if available
       const accessTokenCookie = cookies.find(cookie => cookie.trim().startsWith('accessToken='));
       if (accessTokenCookie) {
         try {
           const token = accessTokenCookie.split('=')[1];
           console.log('Raw token:', token);
           
-          // Decode the JWT payload
           const payload = JSON.parse(atob(token.split('.')[1]));
           console.log('Decoded payload:', payload);
           
-          // Check for different possible field names
           const userType = payload.user_type || payload.userType || payload.role || payload.type || 'developer';
           console.log('Extracted user type from token:', userType);
           
@@ -126,20 +149,17 @@ export default function ProjectBugs() {
     }
   };
 
-  // Fetch project and bugs data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const projectId = params.id;
 
-        // Set user role from cookies
         const userType = getUserTypeFromCookies();
         console.log('User type from cookies:', userType);
         console.log('Setting user role to:', userType);
         setUserRole(userType as "manager" | "QA" | "developer");
 
-        // Fetch project details
         const projectResponse = await fetch(`/api/projects/${projectId}`, {
           credentials: "include",
         });
@@ -158,19 +178,7 @@ export default function ProjectBugs() {
           return;
         }
 
-        // Fetch bugs for the project
-        const bugsResponse = await fetch(`/api/bugs/project/${projectId}`, {
-          credentials: "include",
-        });
-        const bugsResult = await bugsResponse.json();
-
-        console.log('Bugs response:', bugsResult);
-
-        if (bugsResult.success) {
-          setBugsData(bugsResult.data || []);
-        } else {
-          setError("Failed to fetch bugs");
-        }
+        await fetchBugs("", 1, 10);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Something went wrong");
@@ -184,17 +192,16 @@ export default function ProjectBugs() {
     }
   }, [params.id]);
 
-  // Helper functions for status colors
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "new":
-        return "#f44336"; // Red
+        return "#f44336"; 
       case "started":
-        return "#2196f3"; // Blue
+        return "#2196f3"; 
       case "resolved":
-        return "#4caf50"; // Green
+        return "#4caf50"; 
       case "completed":
-        return "#4caf50"; // Green
+        return "#4caf50"; 
       default:
         return "#6E6F72";
     }
@@ -203,19 +210,18 @@ export default function ProjectBugs() {
   const getStatusChipColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "new":
-        return "#FDF2F2"; // Light red
+        return "#FDF2F2";
       case "started":
-        return "#EEF3FF"; // Light blue
+        return "#EEF3FF"; 
       case "resolved":
-        return "#F0F9F0"; // Light green
+        return "#F0F9F0";
       case "completed":
-        return "#F0F9F0"; // Light green
+        return "#F0F9F0"; 
       default:
         return "#F5F5F5";
     }
   };
 
-  // Dialog handlers
   const handleActionsClick = (event: React.MouseEvent<HTMLElement>, bugId: number) => {
     const bug = bugsData.find(b => b.id === bugId);
     console.log('Opening dialog for bug:', bug);
@@ -232,12 +238,89 @@ export default function ProjectBugs() {
     setSelectedBugId(null);
   };
 
-  // API handlers for bug operations
+  const handleAddBugDialogOpen = () => {
+    setAddBugDialogOpen(true);
+  };
+
+  const handleAddBugDialogClose = () => {
+    setAddBugDialogOpen(false);
+  };
+
+  const handleDeadlineToggle = (bugId: number) => {
+    setDeadlineToggles(prev => ({
+      ...prev,
+      [bugId]: !prev[bugId]
+    }));
+  };
+
+  const debouncedFetchBugs = useCallback(
+    debounce((nextValue: string) => fetchBugs(nextValue, 1, itemsPerPage), 300),
+    [itemsPerPage]
+  );
+
+  useEffect(() => {
+    debouncedFetchBugs(searchQuery);
+  }, [searchQuery, debouncedFetchBugs]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchBugs(searchQuery, newPage, itemsPerPage);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+    fetchBugs(searchQuery, 1, newItemsPerPage);
+  };
+
+  const fetchBugs = async (searchTerm: string = "", page: number = 1, limit: number = itemsPerPage) => {
+    try {
+      setIsSearching(true);
+      const projectId = params.id;
+      
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', page.toString());
+      queryParams.append('limit', limit.toString());
+      
+      if (searchTerm.trim() !== "") {
+        queryParams.append('title', searchTerm.trim());
+      }
+
+      const url = `/api/bugs/project/${projectId}?${queryParams.toString()}`;
+      const bugsResponse = await fetch(url, {
+        credentials: "include",
+      });
+      const bugsResult = await bugsResponse.json();
+
+      if (bugsResult.success) {
+        setBugsData(bugsResult.data || []);
+        
+        if (bugsResult.pagination) {
+          setTotalPages(bugsResult.pagination.totalPages || 1);
+          setTotalItems(bugsResult.pagination.totalItems || 0);
+          setCurrentPage(bugsResult.pagination.currentPage || 1);
+        } else {
+          const totalItems = bugsResult.data?.length || 0;
+          setTotalItems(totalItems);
+          setTotalPages(Math.ceil(totalItems / limit));
+          setCurrentPage(page);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching bugs:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleBugCreated = () => {
+    fetchBugs(searchQuery, currentPage, itemsPerPage);
+  };
+
   const handleStatusChange = async (bugId: number, newStatus: string) => {
     try {
       setUpdatingBugId(bugId);
       
-      // Call backend API to update bug status
       const response = await fetch(`/api/bugs/${bugId}/status`, {
         method: 'PATCH',
         headers: {
@@ -254,7 +337,6 @@ export default function ProjectBugs() {
       const result = await response.json();
       
       if (result.success) {
-        // Update local state
         setBugsData(prevBugs => 
           prevBugs.map(bug => 
             bug.id === bugId 
@@ -284,7 +366,6 @@ export default function ProjectBugs() {
     try {
       setDeletingBugId(bugId);
       
-      // Call backend API to delete bug
       const response = await fetch(`/api/bugs/${bugId}`, {
         method: 'DELETE',
         credentials: 'include',
@@ -297,7 +378,6 @@ export default function ProjectBugs() {
       const result = await response.json();
       
       if (result.success) {
-        // Update local state
         setBugsData(prevBugs => prevBugs.filter(bug => bug.id !== bugId));
         console.log('Bug deleted successfully');
       } else {
@@ -339,8 +419,6 @@ export default function ProjectBugs() {
             <span style={{ color: "#000000" }}>
               {projectData ? projectData.name : "Loading..."}
             </span>
-            {projectData && <span style={{ fontSize: "10px", color: "#666" }}> (Debug: {JSON.stringify(projectData)})</span>}
-            {!projectData && <span style={{ fontSize: "10px", color: "#666" }}> (No project data)</span>}
           </Typography>
 
           <Box
@@ -372,9 +450,6 @@ export default function ProjectBugs() {
                   borderRadius: "4.24px",
                 }}
               />
-              <Typography variant="caption" sx={{ color: "#666", ml: 1 }}>
-                (Role: {userRole})
-              </Typography>
             </Box>
 
             <Box sx={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -407,6 +482,7 @@ export default function ProjectBugs() {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
+                onClick={handleAddBugDialogOpen}
                 sx={{
                   backgroundColor: "#007DFA",
                   color: "#F6F8F9",
@@ -443,8 +519,10 @@ export default function ProjectBugs() {
         >
           <Box sx={{ flex: 1 }}>
             <TextField
-              placeholder="Search"
+              placeholder="Search bugs..."
               variant="outlined"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "#FFFFFF",
@@ -712,7 +790,6 @@ export default function ProjectBugs() {
                 <TableRow>
                   <TableCell colSpan={6} sx={{ textAlign: "center", py: 4 }}>
                     <Typography>No bugs found for this project</Typography>
-                    {bugsData && <Typography variant="caption" sx={{ display: "block", mt: 1 }}>Debug: {JSON.stringify(bugsData)}</Typography>}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -784,14 +861,51 @@ export default function ProjectBugs() {
                       />
                     </TableCell>
                     <TableCell>
-                      <CalendarTodayIcon
-                        sx={{ color: "#D0D5DD", width: "21px", height: "21px" }}
-                      />
+                      {deadlineToggles[bug.id] ? (
+                        <Typography
+                          onClick={() => handleDeadlineToggle(bug.id)}
+                          sx={{
+                            color: "#007DFA",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                            "&:hover": {
+                              textDecoration: "underline",
+                            },
+                          }}
+                        >
+                          {new Date(bug.deadline).toLocaleDateString()}
+                        </Typography>
+                      ) : (
+                        <Tooltip title="Click to view deadline">
+                          <IconButton
+                            onClick={() => handleDeadlineToggle(bug.id)}
+                            sx={{
+                              padding: 0,
+                              "&:hover": {
+                                backgroundColor: "transparent",
+                              },
+                            }}
+                          >
+                            <CalendarTodayIcon
+                              sx={{ 
+                                color: "#D0D5DD", 
+                                width: "21px", 
+                                height: "21px",
+                                cursor: "pointer",
+                                "&:hover": {
+                                  color: "#007DFA",
+                                },
+                              }}
+                            />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
-                                                {bug.assignedDevelopers && bug.assignedDevelopers.length > 0 ? (
-                          bug.assignedDevelopers.map((user: any, index: number) => (
+                        {bug.assignedDevelopers && bug.assignedDevelopers.length > 0 ? (
+                          bug.assignedDevelopers.map((user: User, index: number) => (
                             <Avatar
                               key={index}
                               sx={{
@@ -834,7 +948,6 @@ export default function ProjectBugs() {
         </TableContainer>
       </Box>
       
-      {/* Bug Actions Dialog */}
       <BugActionsDialog
         open={dialogOpen}
         anchorEl={dialogAnchorEl}
@@ -847,7 +960,13 @@ export default function ProjectBugs() {
         isUpdating={updatingBugId === selectedBugId}
         isDeleting={deletingBugId === selectedBugId}
       />
-      {/* Debug info */}
+
+      <AddBugDialog
+        open={addBugDialogOpen}
+        onClose={handleAddBugDialogClose}
+        projectId={params.id as string}
+        onBugCreated={handleBugCreated}
+      />
       {selectedBugId && (
         <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: '#f0f0f0', padding: '10px', fontSize: '12px', zIndex: 9999 }}>
           <div>Selected Bug ID: {selectedBugId}</div>
@@ -856,7 +975,14 @@ export default function ProjectBugs() {
         </div>
       )}
       
-      <PaginationBugs />
+      <PaginationBugs 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        totalItems={totalItems} 
+        itemsPerPage={itemsPerPage}
+        onPageChange={handlePageChange}
+        onItemsPerPageChange={handleItemsPerPageChange}
+      />
     </Box>
   );
 }

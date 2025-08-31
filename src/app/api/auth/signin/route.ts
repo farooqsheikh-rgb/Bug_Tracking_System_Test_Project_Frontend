@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({ success: true, user: userData });
 
-    // Set httpOnly cookie for access token
     res.cookies.set("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -31,7 +30,6 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
     });
 
-    // Set non-httpOnly cookie for user type (accessible by frontend)
     res.cookies.set("userType", userData.user_type || userData.userType || "developer", {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",

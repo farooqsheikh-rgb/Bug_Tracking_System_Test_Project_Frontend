@@ -16,7 +16,7 @@ interface BugActionsDialogProps {
   onClose: () => void;
   userRole: "manager" | "QA" | "developer";
   bugId: number;
-  bugType: string; // "bug" or "feature"
+  bugType: string; 
   onStatusChange: (bugId: number, newStatus: string) => void;
   onDelete: (bugId: number) => void;
   isUpdating?: boolean;
@@ -41,7 +41,6 @@ const BugActionsDialog: React.FC<BugActionsDialogProps> = ({
   console.log('BugActionsDialog - Bug Type:', bugType);
   console.log('BugActionsDialog - Bug ID:', bugId);
 
-  // Define status options based on bug type
   const getStatusOptions = () => {
     console.log('Getting status options for bug type:', bugType);
     
@@ -53,7 +52,6 @@ const BugActionsDialog: React.FC<BugActionsDialogProps> = ({
         { label: "completed", displayLabel: "Completed", color: "#4caf50", bgColor: "#F0F9F0" },
       ];
     } else {
-      // Default for bugs
       console.log('Bug status options: new, started, resolved');
       return [
         { label: "new", displayLabel: "New", color: "#f44336", bgColor: "#FDF2F2" },
@@ -75,9 +73,6 @@ const BugActionsDialog: React.FC<BugActionsDialogProps> = ({
     onClose();
   };
 
-  // No need for this variable anymore since we handle roles individually
-
-  // Calculate position relative to the anchor element
   const getPosition = () => {
     if (!anchorEl) return { top: 0, left: 0 };
     
@@ -87,7 +82,7 @@ const BugActionsDialog: React.FC<BugActionsDialogProps> = ({
     
     return {
       top: rect.bottom + scrollTop + 8,
-      left: rect.right + scrollLeft - 220, // Position to the right of the button
+      left: rect.right + scrollLeft - 220, 
     };
   };
 
@@ -109,7 +104,6 @@ const BugActionsDialog: React.FC<BugActionsDialogProps> = ({
           border: "1px solid #E0E0E0",
         }}
       >
-        {/* Header */}
         <Box
           sx={{
             display: "flex",
@@ -135,7 +129,6 @@ const BugActionsDialog: React.FC<BugActionsDialogProps> = ({
           />
         </Box>
 
-        {/* Status Options - Show for developers and QA users */}
         {(userRole === "developer" ) && (
           <>
             {statusOptions.map((status) => (
@@ -176,7 +169,6 @@ const BugActionsDialog: React.FC<BugActionsDialogProps> = ({
           </>
         )}
 
-        {/* Delete Option - Show for managers and QA users */}
         {(userRole === "manager" || userRole === "QA") && (
           <Box
             onClick={() => !isDeleting && handleDeleteClick()}
