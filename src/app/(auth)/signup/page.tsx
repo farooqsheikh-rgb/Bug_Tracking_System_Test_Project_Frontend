@@ -8,43 +8,44 @@ import {
   Link,
 } from "@mui/material";
 import Image from "next/image";
-import signImg from "../../../../public/images/sign.jpg";
+import signImg from "../../../../public/images/Left.png";
 import UserTypeSelectionCard from "@/app/components/UserTypeSelectionCard/page";
 import PersonIcon from "@mui/icons-material/Person";
 import WorkIcon from "@mui/icons-material/Work";
 import { VerifiedUser } from "@mui/icons-material";
 import { UserTypeSelectionCardProps } from "../../../../interfaces/UserTypeSelectionCardProps";
+import userImg from "../../../../public/images/user.png";
+import briefcaseImg from "../../../../public/images/briefcase.png";
+import freelancerImg from "../../../../public/images/freelancer-freelance 1.png";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const Item = styled(Paper)(({ theme }) => ({
+  paddingTop: "265px",
+  paddingLeft: "263px",
+  width: "426px",
   backgroundColor: "#FFFFFF",
-  padding: theme.spacing(0),
-  textAlign: "center",
-  height: "100%",
   display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 0,
+  alignItems: "flex-start",
+  justifyContent: "flex-start",
   boxShadow: "none",
-  position: "relative",
 }));
 
 const cardsData: UserTypeSelectionCardProps[] = [
   {
-    icon: <PersonIcon />,
+    icon: userImg,
     title: "Manager",
     description: "Signup as a manager to manage the tasks and bugs",
     type: "manager",
   },
   {
-    icon: <WorkIcon />,
+    icon: briefcaseImg,
     title: "Developer",
     description: "Signup as a Developer to assign relevant task to QA",
     type: "developer",
   },
   {
-    icon: <VerifiedUser />,
+    icon: freelancerImg,
     title: "QA",
     description: "Signup as a QA to create the bugs and report in tasks",
     type: "qa",
@@ -61,8 +62,8 @@ export default function Signup() {
   };
 
   return (
-    <Grid container spacing={0} style={{ height: "100vh" }}>
-      <Grid size={4.5} style={{ position: "relative", height: "100vh" }}>
+    <Grid container spacing={0} style={{ height: "100vh" , width: "1600px"}}>
+      <Grid style={{ position: "relative", height: "100vh", width: "655px" }}>
         <Image
           src={signImg}
           alt="SignUp"
@@ -72,15 +73,11 @@ export default function Signup() {
         />
       </Grid>
 
-      <Grid size={7.5}>
-        <Item>
-          <Box
+      <Grid style={{width: "945px", height: "100vh"}}>
+        <Box
             sx={{
-              position: "absolute",
-              width: 315,
-              height: 28,
-              top: 36,
-              left: 750,
+              paddingTop: '36px',
+              paddingLeft: '597px',
               zIndex: 1,
             }}
           >
@@ -92,8 +89,6 @@ export default function Signup() {
                 fontSize: "18px",
                 lineHeight: "28px",
                 letterSpacing: "0%",
-                textAlign: "right",
-                verticalAlign: "middle",
                 color: "#64748B",
               }}
             >
@@ -118,17 +113,18 @@ export default function Signup() {
             </Typography>
           </Box>
 
+        <Item>
           <Box
             sx={{
-              marginTop: "40px",
-              textAlign: "left",
+              paddingTop: 0,
+              paddingLeft: 0
+
             }}
           >
             <Typography
               sx={{
                 fontWeight: 700,
                 color: "#2F3367",
-                marginBottom: 2,
                 fontSize: "28px",
                 lineHeight: "100%",
               }}
@@ -136,32 +132,36 @@ export default function Signup() {
               Join Us!
             </Typography>
 
-            <Typography
-              sx={{
-                fontWeight: 400,
-                color: "#8692A6",
-                marginBottom: 4,
-                fontSize: "16px",
-                lineHeight: "28px",
-                width: "426px",
-              }}
-            >
-              To begin this journey, tell us what type of account you&apos;d be
-              opening.
-            </Typography>
-
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              {cardsData.map(({ icon, title, description, type }, idx) => (
-                <UserTypeSelectionCard
-                  key={idx}
-                  icon={icon}
-                  title={title}
-                  description={description}
-                  type={type}
-                  isSelected={selectedType === type}
-                  onSelect={() => handleCardSelect(type)}
-                />
-              ))}
+            <Box sx={{paddingTop: "7px", paddingLeft: 0}}>
+              <Typography
+                sx={{
+                  fontWeight: 400,
+                  color: "#8692A6",
+                  marginBottom: 4,
+                  fontSize: "16px",
+                  lineHeight: "28px",
+                  letterSpacing: "0%"
+                }}
+              >
+                To begin this journey, tell us what type of account you&apos;d be
+                opening.
+              </Typography>
+            </Box>
+            
+            <Box sx={{}}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: "28px"}}>
+                  {cardsData.map(({ icon, title, description, type }, idx) => (
+                    <UserTypeSelectionCard
+                      key={idx}
+                      icon={icon}
+                      title={title}
+                      description={description}
+                      type={type}
+                      isSelected={selectedType === type}
+                      onSelect={() => handleCardSelect(type)}
+                    />
+                  ))}
+                </Box>
             </Box>
           </Box>
         </Item>

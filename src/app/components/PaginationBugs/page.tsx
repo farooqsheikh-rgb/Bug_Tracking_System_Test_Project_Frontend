@@ -38,7 +38,7 @@ export default function PaginationBugs({
   return (
     <Box
       sx={{
-        padding: "20px 0",
+        padding: "19px 0",
         backgroundColor: "#FFFFFF",
         position: "fixed",
         bottom: 0,
@@ -52,7 +52,7 @@ export default function PaginationBugs({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "0 280px",
+          padding: "0 221px",
         }}
       >
         <Typography

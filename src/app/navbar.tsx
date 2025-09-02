@@ -5,37 +5,29 @@ import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import Container from "@mui/material/Container";
-import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import MailIcon from "@mui/icons-material/Mail";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import FolderIcon from "@mui/icons-material/Folder";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import SettingsIcon from "@mui/icons-material/Settings";
-import PaymentIcon from "@mui/icons-material/Payment";
-import { usePathname } from "next/navigation";
-import Image from "next/image";
-import manageBugImg from "../../public/images/manageBug.png";
 import { Divider } from "@mui/material";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import manageBugImg from "../../public/images/Group.png";
+import bagImg from "../../public/images/Bag.png";
+import categoryImg from "../../public/images/Category.png";
+import solidImg from "../../public/images/Solid.png";
+import profileImg from "../../public/images/Profile.png";
+import notificationImg from "../../public/images/Notification.png";
+import messageImg from "../../public/images/Message.png";
+import ellipseImg from "../../public/images/Ellipse 11.png";
 
 const pages = [
-  { name: "Projects", icon: <FolderIcon />, path: "/projects" },
-  { name: "Tasks", icon: <AssignmentIcon />, path: "/projects" },
-  { name: "Manage", icon: <SettingsIcon />, path: "/projects" },
-  { name: "Payments", icon: <PaymentIcon />, path: "/projects" },
+  { name: "Projects", icon: categoryImg, path: "/projects" },
+  { name: "Tasks", icon: bagImg, path: "/projects/[id]" },
+  { name: "Manage", icon: solidImg, path: "/" },
+  { name: "Users", icon: profileImg, path: "/" },
 ];
 
 function ResponsiveAppBar() {
-  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
-    null
-  );
   const pathname = usePathname();
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
 
   const getActivePage = (pagePath: string, pageName: string) => {
     if (pageName === "Tasks" && pathname.includes("/bugs")) return true;
@@ -50,153 +42,136 @@ function ResponsiveAppBar() {
         backgroundColor: "transparent",
         color: "black",
         boxShadow: "none",
+        width: "1165px",
+        height: "182px",
+        paddingTop: "37px",
+        marginLeft: "221px",
       }}
     >
-      <Container maxWidth="xl">
-        <Toolbar disableGutters sx={{ minHeight: "80px" }}>
-          <Box sx={{ display: "flex", alignItems: "center", mr: 4 }}>
-            <Box
-              sx={{
-                width: 31.43,
-                height: 31.31,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mr: 1,
-                position: "relative",
-              }}
-            >
-              <Image
-                src={manageBugImg}
-                alt={"ManageBug"}
-                fill
-                style={{ objectFit: "cover" }}
-                priority
-              ></Image>
-            </Box>
-            <Typography
-              sx={{
-                fontWeight: 700,
-                fontSize: "19.17px",
-                lineHeight: "100%",
-                letterSpacing: "1%",
-                color: "#030303",
-              }}
-            >
-              Manage
-              <span
-                style={{
-                  fontWeight: 100,
-                  color: "#030303",
+      <Box sx={{ width: "100%", height: "100%" }}>
+        <Toolbar
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingTop: 0,
+            paddingBottom: 0,
+            height: "100%",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", }}>
+            <Box sx={{ display: "flex", alignItems: "center",  gap: "6.92px" }}>
+              <Box
+                sx={{
+                  width: 31,
+                  height: 31,
+                  position: "relative",
+                }}
+              >
+                <Image
+                  src={manageBugImg}
+                  alt="ManageBug"
+                  fill
+                  style={{ objectFit: "cover" }}
+                  priority
+                />
+              </Box>
+              <Typography
+                sx={{
+                  fontWeight: 700,
                   fontSize: "19.17px",
                   lineHeight: "100%",
                   letterSpacing: "1%",
+                  color: "#030303",
                 }}
               >
-                Bug
-              </span>
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              flexGrow: 1,
-              display: { xs: "none", md: "flex" },
-              justifyContent: "center",
-            }}
-          >
-            {pages.map((page) => {
-              const isActive = getActivePage(page.path, page.name);
-
-              return (
-                <Button
-                  key={page.name}
-                  onClick={handleCloseNavMenu}
-                  startIcon={
-                    <span
-                      style={{
-                        color: isActive ? "#0C83FA" : "#787486",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      {page.icon}
-                    </span>
-                  }
-                  sx={{
-                    my: 2,
-                    color: isActive ? "#2F3367" : "#787486",
-                    display: "flex",
-                    alignItems: "center",
-                    mx: 2,
-                    textTransform: "none",
-                    fontSize: "16px",
-                    fontWeight: isActive ? 600 : 400,
-                    gap: "8px",
-                    "&:hover": {
-                      backgroundColor: "transparent",
-                      color: "#0C83FA",
-                    },
+                Manage
+                <span
+                  style={{
+                    fontWeight: 100,
+                    color: "#030303",
+                    fontSize: "19.17px",
+                    lineHeight: "100%",
+                    letterSpacing: "1%",
                   }}
                 >
-                  {page.name}
-                </Button>
-              );
-            })}
+                  Bug
+                </span>
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: "flex", gap: "46px" , paddingLeft: "206.47px"}}>
+              {pages.map((page) => {
+                const isActive = getActivePage(page.path, page.name);
+
+                return (
+                  <Button
+                    key={page.name}
+                    startIcon={
+                      <Box
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          position: "relative",
+                        }}
+                      >
+                        <Image
+                          src={page.icon}
+                          alt={page.name}
+                          fill
+                          style={{ objectFit: "cover" }}
+                          priority
+                        />
+                      </Box>
+                    }
+                    sx={{
+                      color: isActive ? "#2F3367" : "#787486",
+                      display: "flex",
+                      alignItems: "center",
+                      textTransform: "none",
+                      fontSize: "12px",
+                      fontWeight: 500
+                    }}
+                  >
+                    {page.name}
+                  </Button>
+                );
+              })}
+            </Box>
           </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-            <IconButton
-              sx={{
-                color: "#868AA5",
-                position: "relative",
-                width: "24px",
-                height: "24px",
-              }}
-            >
-              <NotificationsIcon />
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 1,
-                  right: 15,
-                  width: 8,
-                  height: 8,
-                  backgroundColor: "#e91e63",
-                  borderRadius: "50%",
-                }}
+          <Box sx={{ display: "flex", alignItems: "center", gap: "42px", paddingLeft: "117px" }}>
+            <Box sx={{ width: 24, height: 24, position: "relative" }}>
+              <Image
+                src={notificationImg}
+                alt="Notifications"
+                fill
+                style={{ objectFit: "cover" }}
+                priority
               />
-            </IconButton>
+            </Box>
 
-            <IconButton
-              sx={{
-                color: "#868AA5",
-                position: "relative",
-                width: "24px",
-                height: "24px",
-              }}
-            >
-              <MailIcon />
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 1,
-                  right: 18,
-                  width: 8,
-                  height: 8,
-                  backgroundColor: "#e91e63",
-                  borderRadius: "50%",
-                }}
+            <Box sx={{ width: 24, height: 24, position: "relative" }}>
+              <Image
+                src={messageImg}
+                alt="Messages"
+                fill
+                style={{ objectFit: "cover" }}
+                priority
               />
-            </IconButton>
+            </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Avatar
-                sx={{
-                  width: 40,
-                  height: 40,
-                }}
-              ></Avatar>
+              <Box sx={{ width: 40, height: 40, position: "relative" }}>
+                <Image
+                  src={ellipseImg}
+                  alt="Profile"
+                  fill
+                  style={{ objectFit: "cover" }}
+                  priority
+                />
+              </Box>
+
               <Typography
                 sx={{
                   fontSize: "16px",
@@ -207,6 +182,7 @@ function ResponsiveAppBar() {
               >
                 Dev.
               </Typography>
+ 
               <IconButton
                 sx={{
                   p: 0,
@@ -220,9 +196,11 @@ function ResponsiveAppBar() {
             </Box>
           </Box>
         </Toolbar>
-        <Divider sx={{ bgcolor: "#ECECEE" }} />
-      </Container>
+
+        <Divider sx={{ bgcolor: "#ECECEE", marginTop: "88.69", height: "1px" }} />
+      </Box>
     </AppBar>
   );
 }
+
 export default ResponsiveAppBar;

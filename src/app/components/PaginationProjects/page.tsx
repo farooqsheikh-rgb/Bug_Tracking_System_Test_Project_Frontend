@@ -33,7 +33,7 @@ export default function PaginationProjects({
   return (
     <Box
       sx={{
-        padding: "20px 0",
+        padding: "19px 0",
         backgroundColor: "#FFFFFF",
         position: "fixed",
         bottom: 0,
@@ -47,7 +47,7 @@ export default function PaginationProjects({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "0 280px",
+          padding: "0 221px",
         }}
       >
         <Typography
@@ -61,13 +61,15 @@ export default function PaginationProjects({
           Showing {startItem} to {endItem} of {totalItems} entries
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <Box sx={{ display: "flex", alignItems: "center",}}>
           <Typography
             sx={{
               color: "#6C757D",
               fontSize: "14px",
               fontWeight: "400",
               lineHeight: "22px",
+              letterSpacing: "0%",
+              paddingRight: "5px"
             }}
           >
             Display
@@ -81,12 +83,10 @@ export default function PaginationProjects({
                 borderRadius: "4px",
                 fontSize: "14px",
                 height: "30px",
+                border: "1px solid #DFDFDF",
               }}
             >
-              <MenuItem value={6}>6</MenuItem>
-              <MenuItem value={9}>9</MenuItem>
-              <MenuItem value={12}>12</MenuItem>
-              <MenuItem value={15}>15</MenuItem>
+              <MenuItem value={9} sx={{padding: "0 10px", lineHeight: "22px", fontWeight: 400, fontSize: "14px"}}>9</MenuItem>
             </Select>
           </FormControl>
 
@@ -95,11 +95,12 @@ export default function PaginationProjects({
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
               sx={{
-                backgroundColor: currentPage === 1 ? "#F5F5F5" : "#DFDFDF",
+                backgroundColor: "#DFDFDF",
                 color: currentPage === 1 ? "#BDBDBD" : "#343A40",
                 width: "30px",
                 height: "30px",
                 borderRadius: "2px",
+                paddingLeft: "40px"
               }}
             >
               <KeyboardArrowDownIcon
@@ -107,7 +108,7 @@ export default function PaginationProjects({
               />
             </IconButton>
 
-            <Box sx={{ display: "flex", gap: "4px" }}>
+            <Box sx={{ display: "flex", gap: "10px" }}>
               {totalPages > 0 && Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const pageNum = i + 1;
                 return (
@@ -136,7 +137,7 @@ export default function PaginationProjects({
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
               sx={{
-                backgroundColor: currentPage === totalPages ? "#F5F5F5" : "#DFDFDF",
+                backgroundColor: "#DFDFDF",
                 color: currentPage === totalPages ? "#BDBDBD" : "#343A40",
                 width: "30px",
                 height: "30px",

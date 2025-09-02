@@ -9,10 +9,6 @@ export async function PATCH(
     const { bugId } = await params;
     const token = request.cookies.get("accessToken")?.value;
 
-    console.log('Frontend API - Bug ID:', bugId);
-    console.log('Frontend API - Token exists:', !!token);
-    console.log('Frontend API - Token length:', token?.length);
-
     if (!token) {
       return NextResponse.json(
         { success: false, error: "No token provided" },
@@ -23,9 +19,6 @@ export async function PATCH(
     const body = await request.json();
     const { status } = body;
 
-    console.log('Frontend API - Request body:', body);
-    console.log('Frontend API - Status to update:', status);
-
     if (!status) {
       return NextResponse.json(
         { success: false, error: "Status is required" },
@@ -33,11 +26,7 @@ export async function PATCH(
       );
     }
 
-    try {
-      console.log('Frontend API - Sending request to backend:', `http://localhost:8000/api/v1/bugs/${bugId}/status`);
-      console.log('Frontend API - Request payload:', { status });
-      console.log('Frontend API - Authorization header:', `Bearer ${token.substring(0, 20)}...`);
-      
+    try {      
       const response = await axios.patch(
         `http://localhost:8000/api/v1/bugs/${bugId}/status`,
         { status },
@@ -49,38 +38,45 @@ export async function PATCH(
         }
       );
 
-      console.log('Frontend API - Backend response:', response.data);
       return NextResponse.json(response.data);
-    } catch (error: any) {
-      console.error('Backend error response:', error.response?.data);
-      console.error('Backend error status:', error.response?.status);
-      
-      if (error.response?.status === 403) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: {
+          status?: number;
+          data?: {
+            message?: string;
+          };
+        };
+      };
+
+      if (err.response?.status === 403) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: "Access denied. You don't have permission to update this bug status." 
+          {
+            success: false,
+            error: "Access denied. You don't have permission to update this bug status.",
           },
           { status: 403 }
         );
-      } else if (error.response?.status === 401) {
+      } else if (err.response?.status === 401) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: "Authentication failed. Please sign in again." 
+          {
+            success: false,
+            error: "Authentication failed. Please sign in again.",
           },
           { status: 401 }
         );
-      } else if (error.response?.status === 400) {
+      } else if (err.response?.status === 400) {
         return NextResponse.json(
-          { 
-            success: false, 
-            error: error.response.data?.message || "Invalid request. Please check the status value." 
+          {
+            success: false,
+            error:
+              err.response.data?.message ||
+              "Invalid request. Please check the status value.",
           },
           { status: 400 }
         );
       }
-      
+
       throw error;
     }
   } catch (error: unknown) {

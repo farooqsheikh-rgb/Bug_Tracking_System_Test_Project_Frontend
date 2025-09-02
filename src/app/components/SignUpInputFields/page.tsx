@@ -1,5 +1,5 @@
 import * as React from "react";
-import { TextField, styled, InputAdornment } from "@mui/material";
+import { TextField, styled, InputAdornment, InputLabel } from "@mui/material";
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   backgroundColor: "#F5F5F7",
@@ -48,6 +48,11 @@ export default function SignInputFields({
       value={value}
       onChange={onChange}
       onKeyDown={onKeyDown}
+      slotProps={{
+        inputLabel: {
+          shrink: false,
+        }
+      }}
       inputProps={inputProps}
       InputProps={{
         startAdornment: <InputAdornment position="start">{icon}</InputAdornment>,

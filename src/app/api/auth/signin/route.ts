@@ -39,13 +39,16 @@ export async function POST(req: NextRequest) {
     });
 
     return res;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { error?: string }; status?: number } };
+
     return NextResponse.json(
       {
         success: false,
-        error: error.response?.data?.error || "Invalid Email Or Password",
+        error: err.response?.data?.error || "Invalid Email Or Password",
       },
-      { status: error.response?.status || 500 }
+      { status: err.response?.status || 500 }
     );
   }
+
 }

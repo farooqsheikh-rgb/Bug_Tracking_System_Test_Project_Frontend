@@ -1,5 +1,5 @@
 export interface UserTypeSelectionCardProps {
-  icon: React.ReactNode;  
+  icon: any;  
   title: string;
   description: string;
   type:string

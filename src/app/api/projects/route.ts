@@ -5,8 +5,6 @@ export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get("accessToken")?.value;
 
-    console.log('API route called, token:', token ? 'present' : 'missing');
-
     if (!token) {
       return NextResponse.json(
         { success: false, error: "No token provided" },
@@ -21,8 +19,7 @@ export async function GET(req: NextRequest) {
     const page = searchParams.get('page') || '1';
     const limit = searchParams.get('limit') || '9';
 
-    console.log('Search params:', { searchName, sort, order, page, limit });
-
+    
     let url = "http://localhost:8000/api/v1/projects";
     
     const queryParams = new URLSearchParams();
@@ -50,32 +47,46 @@ export async function GET(req: NextRequest) {
     console.log('Backend response status:', response.status);
 
     return NextResponse.json(response.data, { status: response.status });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as {
+      message?: string;
+      response?: {
+        data?: {
+          message?: string;
+          error?: string;
+        };
+        status?: number;
+      };
+    };
+
     console.error('Frontend API route error:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      fullError: error
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status,
+      fullError: error,
     });
-    
+
     let errorMessage = "Failed to fetch projects";
-    
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    } else if (error.response?.data?.error) {
-      errorMessage = error.response.data.error;
-    } else if (error.message) {
-      errorMessage = error.message;
+
+    if (err.response?.data?.message) {
+      errorMessage = err.response.data.message;
+    } else if (err.response?.data?.error) {
+      errorMessage = err.response.data.error;
+    } else if (err.message) {
+      errorMessage = err.message;
     }
-    
+
+    const statusCode = err.response?.status || 500;
+
     return NextResponse.json(
       {
         success: false,
         error: errorMessage,
       },
-      { status: error.response?.status || 500 }
+      { status: statusCode }
     );
   }
+
 }
 
 export async function POST(req: NextRequest) {
@@ -98,8 +109,7 @@ export async function POST(req: NextRequest) {
     });
 
     const data = response.data;
-    console.log("Backend project creation response:", data);
-
+    
     if (!data.success) {
       return NextResponse.json(
         { success: false, error: data.message || "Creating Project failed" },
@@ -108,13 +118,22 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as {
+      response?: {
+        data?: {
+          error?: string;
+        };
+        status?: number;
+      };
+    };
+
     return NextResponse.json(
       {
         success: false,
-        error: error.response?.data?.error || "Invalid Email Or Password",
+        error: err.response?.data?.error,
       },
-      { status: error.response?.status || 500 }
+      { status: err.response?.status || 500 }
     );
   }
 }

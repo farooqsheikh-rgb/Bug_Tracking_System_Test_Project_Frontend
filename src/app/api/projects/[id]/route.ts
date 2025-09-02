@@ -16,8 +16,6 @@ export async function GET(
       );
     }
 
-    console.log('Frontend API - Fetching project with ID:', projectId);
-    
     const response = await axios.get(`http://localhost:8000/api/v1/projects/${projectId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -25,27 +23,37 @@ export async function GET(
       },
     });
 
-    console.log('Frontend API - Backend response:', response.data);
-    console.log('Frontend API - Response success:', response.data.success);
-    console.log('Frontend API - Project data:', response.data.data);
-
     return NextResponse.json(response.data);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching project:", error);
-    
+
     let errorMessage = "Failed to fetch project";
-    
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    } else if (error.response?.data?.error) {
-      errorMessage = error.response.data.error;
-    } else if (error.message) {
-      errorMessage = error.message;
+    let statusCode = 500;
+
+    const err = error as {
+      response?: {
+        data?: {
+          message?: string;
+          error?: string;
+        };
+        status?: number;
+      };
+      message?: string;
+    };
+
+    if (err.response?.data?.message) {
+      errorMessage = err.response.data.message;
+    } else if (err.response?.data?.error) {
+      errorMessage = err.response.data.error;
+    } else if (err.message) {
+      errorMessage = err.message;
     }
-    
+
+    statusCode = err.response?.status || 500;
+
     return NextResponse.json(
       { success: false, error: errorMessage },
-      { status: error.response?.status || 500 }
+      { status: statusCode }
     );
   }
 }

@@ -231,7 +231,7 @@ export default function AddBugDialog({ open, onClose, projectId, onBugCreated }:
         pb: 1
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography sx={{ fontWeight: 500, fontSize: "27.35px" , color: "#000000"}}>
             Add new
           </Typography>
           <FormControl size="small" sx={{ minWidth: 120 }}>
@@ -265,9 +265,9 @@ export default function AddBugDialog({ open, onClose, projectId, onBugCreated }:
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 3, gap: 2}}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative' }}>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            <Typography sx={{ fontWeight: 400, fontSize: "16.28px" }}>
               Assign to
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -275,8 +275,8 @@ export default function AddBugDialog({ open, onClose, projectId, onBugCreated }:
                 <Avatar
                   key={user.id}
                   sx={{
-                    width: 32,
-                    height: 32,
+                    width: 36.35,
+                    height: 36.35,
                     fontSize: '14px',
                     fontWeight: 'bold',
                     backgroundColor: '#000000',
@@ -375,18 +375,20 @@ export default function AddBugDialog({ open, onClose, projectId, onBugCreated }:
           sx={{
             mb: 3,
             '& .MuiOutlinedInput-root': {
-              fontSize: '16px',
+              fontSize: '34.45px',
               fontWeight: 500,
+            },
+            '& fieldset': {
+              border: 'none',
             },
           }}
         />
 
-        <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+        <Typography sx={{ fontWeight: 400, fontSize: "16.28px", mb: 1 }}>
           Bug details
         </Typography>
         <TextField
           fullWidth
-          multiline
           rows={4}
           placeholder="Add here"
           value={description}
@@ -394,7 +396,8 @@ export default function AddBugDialog({ open, onClose, projectId, onBugCreated }:
           sx={{
             mb: 3,
             '& .MuiOutlinedInput-root': {
-              fontSize: '14px',
+              fontSize: '14.25px',
+              fontWeight: 400
             },
           }}
         />
@@ -403,25 +406,22 @@ export default function AddBugDialog({ open, onClose, projectId, onBugCreated }:
           onDrop={handleFileDrop}
           onDragOver={(e) => e.preventDefault()}
           sx={{
-            border: '2px dashed #D0D5DD',
-            borderRadius: '8px',
             p: 4,
             textAlign: 'center',
             cursor: 'pointer',
-            '&:hover': {
-              borderColor: '#007DFA',
-              backgroundColor: '#F8F9FA',
-            },
           }}
           onClick={() => document.getElementById('file-input')?.click()}
         >
-          <CloudUploadIcon sx={{ fontSize: 48, color: '#B0BABF', mb: 2 }} />
-          <Typography variant="body2" sx={{ color: '#5B6871', mb: 1 }}>
+          <Box sx={{display: "flex", justifyContent: "center", alignItems: "flex-start", gap: 1}}>
+            <CloudUploadIcon sx={{ fontSize: 32, color: '#B0BABF', pb: 1 }} />
+          <Typography sx={{ color: '#5B6871', mb: 1, fontWeight: 500, fontSize: "17.64px" }}>
             Drop any file here or{' '}
             <span style={{ color: '#007DFA', textDecoration: 'underline', cursor: 'pointer' }}>
               browse
             </span>
           </Typography>
+          
+          </Box>
           {selectedFile && (
             <Chip
               label={selectedFile.name}
@@ -441,26 +441,20 @@ export default function AddBugDialog({ open, onClose, projectId, onBugCreated }:
 
       <DialogActions sx={{ p: 3, pt: 0 }}>
         <Button
-          onClick={handleClose}
-          disabled={loading}
-          sx={{ color: '#5B6871' }}
-        >
-          Cancel
-        </Button>
-        <Button
           onClick={handleSubmit}
-          variant="contained"
-          disabled={loading || !title.trim() || !description.trim() || !dueDate}
+          // disabled={loading || !title.trim() || !description.trim() || !dueDate}
           sx={{
+            width: '133px',
+            height: '40px',
             backgroundColor: '#007DFA',
-            color: 'white',
             textTransform: 'none',
             fontWeight: 600,
+            color: '#F6F8F9',
             px: 3,
-            '&:disabled': {
-              backgroundColor: '#E0E0E0',
-              color: '#9E9E9E',
-            },
+            // '&:disabled': {
+            //   backgroundColor: '#E0E0E0',
+            //   color: '#9E9E9E',
+            // },
           }}
         >
           {loading ? <CircularProgress size={20} color="inherit" /> : 'Add'}

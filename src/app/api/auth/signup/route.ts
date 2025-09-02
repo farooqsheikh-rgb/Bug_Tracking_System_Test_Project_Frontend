@@ -34,10 +34,24 @@ export async function POST(req: NextRequest) {
     }
 
     return res;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as {
+      response?: {
+        data?: {
+          error?: string;
+        };
+        status?: number;
+      };
+    };
+
     return NextResponse.json(
-      { success: false, error: error.response?.data?.error || "Signup failed" },
-      { status: error.response?.status || 500 }
+      {
+        success: false,
+        error: err.response?.data?.error || "Signup failed",
+      },
+      {
+        status: err.response?.status || 500,
+      }
     );
   }
 }

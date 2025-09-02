@@ -67,12 +67,17 @@ export default function ProjectBugs() {
   const params = useParams();
   const router = useRouter();
 
-  const [userRole, setUserRole] = React.useState<"manager" | "QA" | "developer">("developer");
+  const [userRole, setUserRole] = React.useState<
+    "manager" | "QA" | "developer"
+  >("developer");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogAnchorEl, setDialogAnchorEl] = React.useState<HTMLElement | null>(null);
+  const [dialogAnchorEl, setDialogAnchorEl] =
+    React.useState<HTMLElement | null>(null);
   const [selectedBugId, setSelectedBugId] = React.useState<number | null>(null);
   const [addBugDialogOpen, setAddBugDialogOpen] = useState(false);
-  const [deadlineToggles, setDeadlineToggles] = useState<{ [key: number]: boolean }>({});
+  const [deadlineToggles, setDeadlineToggles] = useState<{
+    [key: number]: boolean;
+  }>({});
   const [subtasksFilter, setSubtasksFilter] = React.useState("");
   const [meFilter, setMeFilter] = React.useState("");
   const [assigneesFilter, setAssigneesFilter] = useState("");
@@ -90,14 +95,19 @@ export default function ProjectBugs() {
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    console.log('User role state changed to:', userRole);
-    console.log('Current user role for dialog:', userRole);
+    console.log("User role state changed to:", userRole);
+    console.log("Current user role for dialog:", userRole);
   }, [userRole]);
 
   useEffect(() => {
-    console.log('Project data state changed to:', projectData);
-    console.log('Project name from state:', projectData?.name);
+    console.log("Project data state changed to:", projectData);
+    console.log("Project name from state:", projectData?.name);
   }, [projectData]);
+
+  useEffect(() => {
+    const userType = getUserTypeFromCookies();
+    setUserRole(userType as "manager" | "QA" | "developer");
+  }, []);
 
   const handleSubtasksChange = (event: SelectChangeEvent) => {
     setSubtasksFilter(event.target.value);
@@ -113,39 +123,48 @@ export default function ProjectBugs() {
 
   const getUserTypeFromCookies = () => {
     try {
-      const cookies = document.cookie.split(';');
-      console.log('All cookies:', cookies);
-      
-      const userTypeCookie = cookies.find(cookie => cookie.trim().startsWith('userType='));
+      const cookies = document.cookie.split(";");
+      console.log("All cookies:", cookies);
+
+      const userTypeCookie = cookies.find((cookie) =>
+        cookie.trim().startsWith("userType=")
+      );
       if (userTypeCookie) {
-        const userType = userTypeCookie.split('=')[1];
-        console.log('User type from cookie:', userType);
+        const userType = userTypeCookie.split("=")[1];
+        console.log("User type from cookie:", userType);
         return userType;
       }
-      
-      const accessTokenCookie = cookies.find(cookie => cookie.trim().startsWith('accessToken='));
+
+      const accessTokenCookie = cookies.find((cookie) =>
+        cookie.trim().startsWith("accessToken=")
+      );
       if (accessTokenCookie) {
         try {
-          const token = accessTokenCookie.split('=')[1];
-          console.log('Raw token:', token);
-          
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          console.log('Decoded payload:', payload);
-          
-          const userType = payload.user_type || payload.userType || payload.role || payload.type || 'developer';
-          console.log('Extracted user type from token:', userType);
-          
+          const token = accessTokenCookie.split("=")[1];
+          console.log("Raw token:", token);
+
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          console.log("Decoded payload:", payload);
+
+          const userType =
+            payload.user_type ||
+            payload.userType ||
+            payload.role ||
+            payload.type ||
+            "developer";
+          console.log("Extracted user type from token:", userType);
+
           return userType;
         } catch (tokenError) {
-          console.error('Error parsing token:', tokenError);
+          console.error("Error parsing token:", tokenError);
         }
       }
-      
-      console.log('No user type cookie or valid token found');
-      return 'developer';
+
+      console.log("No user type cookie or valid token found");
+      return "developer";
     } catch (error) {
-      console.error('Error getting user type from cookies:', error);
-      return 'developer';
+      console.error("Error getting user type from cookies:", error);
+      return "developer";
     }
   };
 
@@ -156,8 +175,8 @@ export default function ProjectBugs() {
         const projectId = params.id;
 
         const userType = getUserTypeFromCookies();
-        console.log('User type from cookies:', userType);
-        console.log('Setting user role to:', userType);
+        console.log("User type from cookies:", userType);
+        console.log("Setting user role to:", userType);
         setUserRole(userType as "manager" | "QA" | "developer");
 
         const projectResponse = await fetch(`/api/projects/${projectId}`, {
@@ -165,14 +184,14 @@ export default function ProjectBugs() {
         });
         const projectResult = await projectResponse.json();
 
-        console.log('Project response:', projectResult);
-        console.log('Project response success:', projectResult.success);
-        console.log('Project data:', projectResult.data);
-        console.log('Project name:', projectResult.data?.name);
+        console.log("Project response:", projectResult);
+        console.log("Project response success:", projectResult.success);
+        console.log("Project data:", projectResult.data);
+        console.log("Project name:", projectResult.data?.name);
 
         if (projectResult.success) {
           setProjectData(projectResult.data);
-          console.log('Project data set to state:', projectResult.data);
+          console.log("Project data set to state:", projectResult.data);
         } else {
           setError("Failed to fetch project details");
           return;
@@ -195,15 +214,15 @@ export default function ProjectBugs() {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "new":
-        return "#f44336"; 
+        return "#EC5962";
       case "started":
-        return "#2196f3"; 
+        return "#3069FE";
       case "resolved":
-        return "#4caf50"; 
+        return "#00B894";
       case "completed":
-        return "#4caf50"; 
+        return "#00B894";
       default:
-        return "#6E6F72";
+        return "#EC5962";
     }
   };
 
@@ -212,21 +231,26 @@ export default function ProjectBugs() {
       case "new":
         return "#FDF2F2";
       case "started":
-        return "#EEF3FF"; 
+        return "#EEF3FF";
       case "resolved":
-        return "#F0F9F0";
+        return "#00B89414";
       case "completed":
-        return "#F0F9F0"; 
+        return "#00B89414";
+      case "pending":
+        return "#FDF2F2";
       default:
-        return "#F5F5F5";
+        return "#FDF2F2";
     }
   };
 
-  const handleActionsClick = (event: React.MouseEvent<HTMLElement>, bugId: number) => {
-    const bug = bugsData.find(b => b.id === bugId);
-    console.log('Opening dialog for bug:', bug);
-    console.log('Bug type:', bug?.type);
-    console.log('Bug status:', bug?.status);
+  const handleActionsClick = (
+    event: React.MouseEvent<HTMLElement>,
+    bugId: number
+  ) => {
+    const bug = bugsData.find((b) => b.id === bugId);
+    console.log("Opening dialog for bug:", bug);
+    console.log("Bug type:", bug?.type);
+    console.log("Bug status:", bug?.status);
     setDialogAnchorEl(event.currentTarget);
     setSelectedBugId(bugId);
     setDialogOpen(true);
@@ -247,9 +271,9 @@ export default function ProjectBugs() {
   };
 
   const handleDeadlineToggle = (bugId: number) => {
-    setDeadlineToggles(prev => ({
+    setDeadlineToggles((prev) => ({
       ...prev,
-      [bugId]: !prev[bugId]
+      [bugId]: !prev[bugId],
     }));
   };
 
@@ -273,17 +297,21 @@ export default function ProjectBugs() {
     fetchBugs(searchQuery, 1, newItemsPerPage);
   };
 
-  const fetchBugs = async (searchTerm: string = "", page: number = 1, limit: number = itemsPerPage) => {
+  const fetchBugs = async (
+    searchTerm: string = "",
+    page: number = 1,
+    limit: number = itemsPerPage
+  ) => {
     try {
       setIsSearching(true);
       const projectId = params.id;
-      
+
       const queryParams = new URLSearchParams();
-      queryParams.append('page', page.toString());
-      queryParams.append('limit', limit.toString());
-      
+      queryParams.append("page", page.toString());
+      queryParams.append("limit", limit.toString());
+
       if (searchTerm.trim() !== "") {
-        queryParams.append('title', searchTerm.trim());
+        queryParams.append("title", searchTerm.trim());
       }
 
       const url = `/api/bugs/project/${projectId}?${queryParams.toString()}`;
@@ -294,7 +322,7 @@ export default function ProjectBugs() {
 
       if (bugsResult.success) {
         setBugsData(bugsResult.data || []);
-        
+
         if (bugsResult.pagination) {
           setTotalPages(bugsResult.pagination.totalPages || 1);
           setTotalItems(bugsResult.pagination.totalItems || 0);
@@ -320,43 +348,42 @@ export default function ProjectBugs() {
   const handleStatusChange = async (bugId: number, newStatus: string) => {
     try {
       setUpdatingBugId(bugId);
-      
+
       const response = await fetch(`/api/bugs/${bugId}/status`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
-        body: JSON.stringify({ status: newStatus })
+        credentials: "include",
+        body: JSON.stringify({ status: newStatus }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update bug status');
+        throw new Error("Failed to update bug status");
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
-        setBugsData(prevBugs => 
-          prevBugs.map(bug => 
-            bug.id === bugId 
-              ? { 
-                  ...bug, 
+        setBugsData((prevBugs) =>
+          prevBugs.map((bug) =>
+            bug.id === bugId
+              ? {
+                  ...bug,
                   status: newStatus,
                   statusColor: getStatusColor(newStatus),
-                  chipColor: getStatusChipColor(newStatus)
+                  chipColor: getStatusChipColor(newStatus),
                 }
               : bug
           )
         );
-        console.log('Bug status updated successfully');
+        console.log("Bug status updated successfully");
       } else {
-        throw new Error(result.message || 'Failed to update bug status');
+        throw new Error(result.message || "Failed to update bug status");
       }
-      
     } catch (error) {
-      console.error('Error updating bug status:', error);
-      alert('Failed to update bug status. Please try again.');
+      console.error("Error updating bug status:", error);
+      alert("Failed to update bug status. Please try again.");
     } finally {
       setUpdatingBugId(null);
     }
@@ -365,625 +392,781 @@ export default function ProjectBugs() {
   const handleDeleteBug = async (bugId: number) => {
     try {
       setDeletingBugId(bugId);
-      
+
       const response = await fetch(`/api/bugs/${bugId}`, {
-        method: 'DELETE',
-        credentials: 'include',
+        method: "DELETE",
+        credentials: "include",
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to delete bug');
+        throw new Error("Failed to delete bug");
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
-        setBugsData(prevBugs => prevBugs.filter(bug => bug.id !== bugId));
-        console.log('Bug deleted successfully');
+        setBugsData((prevBugs) => prevBugs.filter((bug) => bug.id !== bugId));
+        console.log("Bug deleted successfully");
       } else {
-        throw new Error(result.message || 'Failed to delete bug');
+        throw new Error(result.message || "Failed to delete bug");
       }
-      
     } catch (error) {
-      console.error('Error deleting bug:', error);
-      alert('Failed to delete bug. Please try again.');
+      console.error("Error deleting bug:", error);
+      alert("Failed to delete bug. Please try again.");
     } finally {
       setDeletingBugId(null);
     }
   };
 
   return (
-    <Box
-      sx={{
-        padding: "32px 70px",
-        backgroundColor: "#FFFFFF",
-        minHeight: "100vh",
-      }}
-    >
-      <ResponsiveAppBar />
-
-      <Box sx={{ maxWidth: "xl", margin: "20px auto" }}>
-        <Box sx={{ marginBottom: "32px" }}>
-          <Typography
-            sx={{
-              fontSize: "12px",
-              fontWeight: "400",
-              color: "#5B6871",
-              lineHeight: "16px",
-              marginBottom: "5px",
-              cursor: "pointer",
-            }}
-            onClick={() => router.push("/projects")}
-          >
-            Projects &gt;{" "}
-            <span style={{ color: "#000000" }}>
-              {projectData ? projectData.name : "Loading..."}
-            </span>
-          </Typography>
-
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <Typography
-                sx={{
-                  fontWeight: 700,
-                  fontSize: "36px",
-                  lineHeight: "48px",
-                  color: "#252C32",
-                }}
-              >
-                All bugs listing
-              </Typography>
-              <Chip
-                label="Bugs"
-                sx={{
-                  backgroundColor: "#FDF2F2",
-                  color: "#EC5962",
-                  fontWeight: "500",
-                  fontSize: "12.72px",
-                  height: "25.45px",
-                  borderRadius: "4.24px",
-                }}
-              />
-            </Box>
-
-            <Box sx={{ display: "flex", gap: "12px", alignItems: "center" }}>
-              <IconButton
-                sx={{
-                  color: "#5B6871",
-                  width: "40px",
-                  height: "40px",
-                  border: "1px solid #D0D5DD",
-                  borderRadius: "6px",
-                }}
-              >
-                <SettingsIcon sx={{ color: "#5B6871" }} />
-              </IconButton>
-
-              <IconButton
-                sx={{
-                  color: "#5B6871",
-                  width: "40px",
-                  height: "40px",
-                  border: "1px solid #D0D5DD",
-                  borderRadius: "6px",
-                }}
-              >
-                <MoreVertIcon
-                  sx={{ transform: "rotate(90deg)", color: "#5B6871" }}
-                />
-              </IconButton>
-
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleAddBugDialogOpen}
-                sx={{
-                  backgroundColor: "#007DFA",
-                  color: "#F6F8F9",
-                  textTransform: "none",
-                  borderRadius: "6px",
-                  padding: "12px 20px",
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  height: "40px",
-                  width: "163px",
-                  lineHeight: "24px",
-                  letterSpacing: "-0.6%",
-                }}
-              >
-                New Task bug
-              </Button>
-            </Box>
-          </Box>
-        </Box>
+    <>
+      <Box sx={{ width: "100%", height: "100%", backgroundColor: "#FFFFFF" }}>
+        <ResponsiveAppBar />
 
         <Box
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "16px",
-            width: "100%",
-            borderTop: "1px solid #DDE2E4",
-            borderBottom: "1px solid #DDE2E4",
-            padding: "25px 0",
-            margin: "25px 0",
+            width: "1165px",
+            marginLeft: "221px",
           }}
         >
-          <Box sx={{ flex: 1 }}>
-            <TextField
-              placeholder="Search bugs..."
-              variant="outlined"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "#FFFFFF",
-                  borderRadius: "6px",
-                  width: "236px",
-                  height: "40px",
-                  "& fieldset": {
-                    borderColor: "#DDE2E4",
-                  },
-                },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <SearchIcon
+          <Box sx={{ maxWidth: "xl", margin: "30px auto" }}>
+            <Box sx={{ padding: "0 32px" }}>
+              <Typography
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: "400",
+                  color: "#5B6871",
+                  lineHeight: "16px",
+                  cursor: "pointer",
+                }}
+                onClick={() => router.push("/projects")}
+              >
+                Projects &gt;{" "}
+                <span style={{ color: "#000000" }}>
+                  {projectData ? projectData.name : "Loading..."}
+                </span>
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: "21px" }}
+                >
+                  <Typography
                     sx={{
-                      color: "#B0BABF",
-                      marginRight: "8px",
-                      fontSize: "20px",
+                      fontWeight: 700,
+                      fontSize: "36px",
+                      lineHeight: "48px",
+                      color: "#252C32",
+                      letterSpacing: "-2.2%",
+                    }}
+                  >
+                    All bugs listing
+                  </Typography>
+                  <Chip
+                    label="Bugs"
+                    sx={{
+                      marginTop: "18px",
+                      backgroundColor: "#FDF2F2",
+                      color: "#EC5962",
+                      fontWeight: "500",
+                      fontSize: "12.72px",
+                      width: "47.97",
+                      height: "25.45px",
+                      borderRadius: "4.24px",
                     }}
                   />
-                ),
-              }}
-            />
-          </Box>
+                </Box>
 
-          <Box
-            sx={{
-              display: "flex",
-              gap: "16px",
-              justifyContent: "center",
-              flex: 5,
-            }}
-          >
-            <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel
-                sx={{
-                  color: "#252C32",
-                  fontWeight: "400",
-                  fontSize: "14px",
-                  lineHeight: "24px",
-                  letterSpacing: "-0.6%",
-                }}
-              >
-                Subtasks
-              </InputLabel>
-              <Select
-                value={subtasksFilter}
-                label="Subtasks"
-                onChange={handleSubtasksChange}
-                sx={{
-                  color: "#5B6871",
-                  "& fieldset": { border: "none" },
-                }}
-              >
-                <MenuItem value="all">All</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl sx={{ minWidth: 100 }}>
-              <InputLabel
-                sx={{
-                  color: "#252C32",
-                  fontWeight: "400",
-                  fontSize: "14px",
-                  lineHeight: "24px",
-                  letterSpacing: "-0.6%",
-                }}
-              >
-                Me
-              </InputLabel>
-              <Select
-                value={meFilter}
-                label="Me"
-                onChange={handleMeChange}
-                sx={{
-                  color: "#5B6871",
-                  "& fieldset": { border: "none" },
-                }}
-              >
-                <MenuItem value="all">All</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel
-                sx={{
-                  color: "#252C32",
-                  fontWeight: "400",
-                  fontSize: "14px",
-                  lineHeight: "24px",
-                  letterSpacing: "-0.6%",
-                }}
-              >
-                Assignees
-              </InputLabel>
-              <Select
-                value={assigneesFilter}
-                label="Assignees"
-                onChange={handleAssigneesChange}
-                sx={{
-                  color: "#5B6871",
-                  "& fieldset": { border: "none" },
-                }}
-              >
-                <MenuItem value="all">All Assignees</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <IconButton
-              sx={{
-                color: "#344054",
-                border: "1px solid #D0D5DD",
-                borderRadius: "8px",
-                width: "32px",
-                height: "32px",
-              }}
-            >
-              <FilterListIcon
-                sx={{ width: "16px", height: "16px", color: "#344054" }}
-              />
-            </IconButton>
-
-            <IconButton
-              sx={{
-                color: "#344054",
-                border: "1px solid #D0D5DD",
-                borderRadius: "8px",
-                width: "32px",
-                height: "32px",
-              }}
-            >
-              <ViewModuleIcon
-                sx={{ width: "16px", height: "16px", color: "#344054" }}
-              />
-            </IconButton>
-
-            <Box sx={{ display: "flex", gap: "0px" }}>
-              <IconButton
-                sx={{
-                  backgroundColor: "#F6F8F9",
-                  color: "#B0BABF",
-                  border: "1px solid #D0D5DD",
-                  borderRadius: "8px",
-                  width: "32px",
-                  height: "32px",
-                }}
-              >
-                <ViewComfyIcon
-                  sx={{ width: "16px", height: "16px", color: "#B0BABF" }}
-                />
-              </IconButton>
-
-              <IconButton
-                sx={{
-                  backgroundColor: "#F6F8F9",
-                  color: "#007DFA",
-                  border: "1px solid #D0D5DD",
-                  borderRadius: "8px",
-                  width: "32px",
-                  height: "32px",
-                }}
-              >
-                <ViewListIcon
-                  sx={{ width: "16px", height: "16px", color: "#007DFA" }}
-                />
-              </IconButton>
-            </Box>
-          </Box>
-        </Box>
-
-        <TableContainer
-          component={Paper}
-          sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)", borderRadius: "12px" }}
-        >
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#F9FAFC" }}>
-                <TableCell>
-                  <Checkbox sx={{ width: "18.54px", height: "18.54px" }} />
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    color: "#3A3541DE",
-                    fontSize: "12.36px",
-                    lineHeight: "24.72px",
-                    letterSpacing: "0.18px",
-                  }}
-                >
-                  BUG DETAILS
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    color: "#3A3541DE",
-                    fontSize: "12.36px",
-                    lineHeight: "24.72px",
-                    letterSpacing: "0.18px",
-                  }}
-                >
-                  STATE
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    color: "#3A3541DE",
-                    fontSize: "12.36px",
-                    lineHeight: "24.72px",
-                    letterSpacing: "0.18px",
-                  }}
-                >
-                  STATUS
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    color: "#3A3541DE",
-                    fontSize: "12.36px",
-                    lineHeight: "24.72px",
-                    letterSpacing: "0.18px",
-                  }}
-                >
-                  DUE DATE
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    color: "#3A3541DE",
-                    fontSize: "12.36px",
-                    lineHeight: "24.72px",
-                    letterSpacing: "0.18px",
-                  }}
-                >
-                  ASSIGNED TO
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 600,
-                    color: "#3A3541DE",
-                    fontSize: "12.36px",
-                    lineHeight: "24.72px",
-                    letterSpacing: "0.18px",
-                  }}
-                >
-                  ACTION
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} sx={{ textAlign: "center", py: 4 }}>
-                    <Typography>Loading bugs...</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell colSpan={6} sx={{ textAlign: "center", py: 4 }}>
-                    <Typography color="error">{error}</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : bugsData.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} sx={{ textAlign: "center", py: 4 }}>
-                    <Typography>No bugs found for this project</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                bugsData.map((bug) => (
-                  <TableRow
-                    key={bug.id}
-                    sx={{ "&:hover": { backgroundColor: "#f8f9fa" } }}
+                <Box sx={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <IconButton
+                    sx={{
+                      color: "#5B6871",
+                      width: "40px",
+                      height: "40px",
+                      border: "1px solid #D0D5DD",
+                      borderRadius: "6px",
+                    }}
                   >
-                    <TableCell>
-                      <Checkbox sx={{ width: "18.54px", height: "18.54px" }} />
-                    </TableCell>
-                    <TableCell>
-                      <Box
+                    <SettingsIcon sx={{ color: "#5B6871" }} />
+                  </IconButton>
+
+                  <IconButton
+                    sx={{
+                      color: "#5B6871",
+                      width: "40px",
+                      height: "40px",
+                      border: "1px solid #D0D5DD",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <MoreVertIcon
+                      sx={{ transform: "rotate(90deg)", color: "#5B6871" }}
+                    />
+                  </IconButton>
+
+                  {userRole === "QA" && (
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={handleAddBugDialogOpen}
+                      sx={{
+                        backgroundColor: "#007DFA",
+                        color: "#F6F8F9",
+                        textTransform: "none",
+                        borderRadius: "6px",
+                        padding: "8px",
+                        fontWeight: 600,
+                        fontSize: "14px",
+                        height: "40px",
+                        width: "163px",
+                        lineHeight: "24px",
+                        letterSpacing: "-0.6%",
+                      }}
+                    >
+                      New Task bug
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "100%",
+                borderTop: "1px solid #DDE2E4",
+                borderBottom: "1px solid #DDE2E4",
+                margin: "16px 0",
+                padding: "0 32px",
+              }}
+            >
+              <Box sx={{ marginRight: "152px" }}>
+                <TextField
+                  placeholder="Search"
+                  variant="outlined"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#FFFFFF",
+                      borderRadius: "6px",
+                      width: "236px",
+                      height: "40px",
+                      "& fieldset": {
+                        borderColor: "#DDE2E4",
+                      },
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <SearchIcon
                         sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
+                          color: "#B0BABF",
+                          marginRight: "8px",
+                          fontSize: "20px",
                         }}
-                      >
-                        <Box
-                          sx={{
-                            width: "10px",
-                            height: "10px",
-                            borderRadius: "6px",
-                            backgroundColor: getStatusColor(bug.status),
-                          }}
-                        />
-                        <Typography
-                          sx={{
-                            fontWeight: "400",
-                            fontSize: "14.36px",
-                            color: "#3A3541AD",
-                          }}
-                        >
-                          {bug.title}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box
+                      />
+                    ),
+                  }}
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                }}
+              >
+                <FormControl sx={{ minWidth: 121 }}>
+                  <InputLabel
+                    sx={{
+                      color: "#252C32",
+                      fontWeight: "400",
+                      fontSize: "14px",
+                      lineHeight: "24px",
+                      letterSpacing: "-0.6%",
+                    }}
+                  >
+                    Subtasks
+                  </InputLabel>
+                  <Select
+                    value={subtasksFilter}
+                    label="Subtasks"
+                    onChange={handleSubtasksChange}
+                    sx={{
+                      color: "#5B6871",
+                      "& fieldset": { border: "none" },
+                    }}
+                  >
+                    <MenuItem value="all">All</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <FormControl sx={{ minWidth: 79 }}>
+                  <InputLabel
+                    sx={{
+                      color: "#252C32",
+                      fontWeight: "400",
+                      fontSize: "14px",
+                      lineHeight: "24px",
+                      letterSpacing: "-0.6%",
+                    }}
+                  >
+                    Me
+                  </InputLabel>
+                  <Select
+                    value={meFilter}
+                    label="Me"
+                    onChange={handleMeChange}
+                    sx={{
+                      color: "#5B6871",
+                      "& fieldset": { border: "none" },
+                    }}
+                  >
+                    <MenuItem value="all">All</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <FormControl sx={{ minWidth: 120 }}>
+                  <InputLabel
+                    sx={{
+                      color: "#252C32",
+                      fontWeight: "400",
+                      fontSize: "14px",
+                      lineHeight: "24px",
+                      letterSpacing: "-0.6%",
+                    }}
+                  >
+                    Assignees
+                  </InputLabel>
+                  <Select
+                    value={assigneesFilter}
+                    label="Assignees"
+                    onChange={handleAssigneesChange}
+                    sx={{
+                      color: "#5B6871",
+                      "& fieldset": { border: "none" },
+                    }}
+                  >
+                    <MenuItem value="all">All Assignees</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: "8px",
+                  alignItems: "center",
+                  marginLeft: "240px",
+                }}
+              >
+                <IconButton
+                  sx={{
+                    color: "#344054",
+                    border: "1px solid #D0D5DD",
+                    borderRadius: "8px",
+                    width: "32px",
+                    height: "32px",
+                  }}
+                >
+                  <FilterListIcon
+                    sx={{ width: "16px", height: "16px", color: "#344054" }}
+                  />
+                </IconButton>
+
+                <IconButton
+                  sx={{
+                    color: "#344054",
+                    border: "1px solid #D0D5DD",
+                    borderRadius: "8px",
+                    width: "32px",
+                    height: "32px",
+                  }}
+                >
+                  <ViewModuleIcon
+                    sx={{ width: "16px", height: "16px", color: "#344054" }}
+                  />
+                </IconButton>
+
+                <Box sx={{ display: "flex", gap: "0px" }}>
+                  <IconButton
+                    sx={{
+                      backgroundColor: "#F6F8F9",
+                      color: "#B0BABF",
+                      border: "1px solid #D0D5DD",
+                      borderRadius: "8px",
+                      width: "32px",
+                      height: "32px",
+                    }}
+                  >
+                    <ViewComfyIcon
+                      sx={{ width: "16px", height: "16px", color: "#B0BABF" }}
+                    />
+                  </IconButton>
+
+                  <IconButton
+                    sx={{
+                      backgroundColor: "#F6F8F9",
+                      color: "#007DFA",
+                      border: "1px solid #D0D5DD",
+                      borderRadius: "8px",
+                      width: "32px",
+                      height: "32px",
+                    }}
+                  >
+                    <ViewListIcon
+                      sx={{ width: "16px", height: "16px", color: "#007DFA" }}
+                    />
+                  </IconButton>
+                </Box>
+              </Box>
+            </Box>
+
+            <TableContainer component={Paper} sx={{ marginTop: "24px" }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#F9FAFC" }}>
+                    <TableCell
+                    sx={{
+                      width: "57px"
+                    }}>
+                      <Checkbox
                         sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontWeight: "400",
-                            fontSize: "14.36px",
-                            color: "#3A3541AD",
-                          }}
-                        >
-                          {bug.type}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={bug.status}
-                        sx={{
-                          backgroundColor: getStatusChipColor(bug.status),
-                          color: getStatusColor(bug.status),
-                          fontSize: "12.72px",
-                          lineHeight: "25.45px",
-                          fontWeight: 500,
-                          borderRadius: "6.36px",
+                          width: "18.54px",
+                          height: "18.54px",
+                          paddingLeft: "21px",
                         }}
                       />
                     </TableCell>
-                    <TableCell>
-                      {deadlineToggles[bug.id] ? (
-                        <Typography
-                          onClick={() => handleDeadlineToggle(bug.id)}
-                          sx={{
-                            color: "#007DFA",
-                            fontSize: "12px",
-                            cursor: "pointer",
-                            fontWeight: 500,
-                            "&:hover": {
-                              textDecoration: "underline",
-                            },
-                          }}
-                        >
-                          {new Date(bug.deadline).toLocaleDateString()}
-                        </Typography>
-                      ) : (
-                        <Tooltip title="Click to view deadline">
-                          <IconButton
-                            onClick={() => handleDeadlineToggle(bug.id)}
-                            sx={{
-                              padding: 0,
-                              "&:hover": {
-                                backgroundColor: "transparent",
-                              },
-                            }}
-                          >
-                            <CalendarTodayIcon
-                              sx={{ 
-                                color: "#D0D5DD", 
-                                width: "21px", 
-                                height: "21px",
-                                cursor: "pointer",
-                                "&:hover": {
-                                  color: "#007DFA",
-                                },
-                              }}
-                            />
-                          </IconButton>
-                        </Tooltip>
-                      )}
+
+                    <TableCell
+                      sx={{
+                        width: "384px",
+                        fontWeight: 600,
+                        color: "#3A3541DE",
+                        fontSize: "12.36px",
+                        lineHeight: "24.72px",
+                        letterSpacing: "0.18px",
+                        position: "relative",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          left: 0,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          height: "14.42px",
+                          width: "2px",
+                          backgroundColor: "#3A35411F",
+                        },
+                      }}
+                    >
+                      DETAILS
                     </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        {bug.assignedDevelopers && bug.assignedDevelopers.length > 0 ? (
-                          bug.assignedDevelopers.map((user: User, index: number) => (
-                            <Avatar
-                              key={index}
-                              sx={{
-                                width: "25.45px",
-                                height: "25.45px",
-                                fontSize: "14px",
-                                fontWeight: "bold",
-                                backgroundColor: "#000000ff",
-                              }}
-                            >
-                              {user.name.charAt(0)}
-                            </Avatar>
-                          ))
-                        ) : (
-                          <Typography sx={{ fontSize: "12px", color: "#6E6F72" }}>
-                            Unassigned
-                          </Typography>
-                        )}
-                      </Box>
+
+                    <TableCell
+                      sx={{
+                        width: "148px",
+                        fontWeight: 600,
+                        color: "#3A3541DE",
+                        fontSize: "12.36px",
+                        lineHeight: "24.72px",
+                        letterSpacing: "0.18px",
+                        position: "relative",
+                        textAlign: "center",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          left: 0,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          height: "14.42px",
+                          width: "2px",
+                          backgroundColor: "#3A35411F",
+                        },
+                      }}
+                    >
+                      STATE
                     </TableCell>
-                    <TableCell>
-                      <IconButton
-                        onClick={(event) => handleActionsClick(event, bug.id)}
-                        disabled={updatingBugId === bug.id || deletingBugId === bug.id}
-                        sx={{
-                          color: "#3A35418A",
-                          width: "4.12px",
-                          height: "16.48px",
-                          opacity: (updatingBugId === bug.id || deletingBugId === bug.id) ? 0.5 : 1,
-                        }}
-                      >
-                        <MoreVertIcon />
-                      </IconButton>
+
+                    <TableCell
+                      sx={{
+                        width: "152px",
+                        fontWeight: 600,
+                        color: "#3A3541DE",
+                        fontSize: "12.36px",
+                        lineHeight: "24.72px",
+                        letterSpacing: "0.18px",
+                        position: "relative",
+                        textAlign: "center",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          left: 0,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          height: "14.42px",
+                          width: "2px",
+                          backgroundColor: "#3A35411F",
+                        },
+                      }}
+                    >
+                      STATUS
+                    </TableCell>
+
+                    <TableCell
+                      sx={{
+                        width: "124px",
+                        fontWeight: 600,
+                        color: "#3A3541DE",
+                        fontSize: "12.36px",
+                        lineHeight: "24.72px",
+                        letterSpacing: "0.18px",
+                        position: "relative",
+                        textAlign: "center",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          left: 0,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          height: "14.42px",
+                          width: "2px",
+                          backgroundColor: "#3A35411F",
+                        },
+                      }}
+                    >
+                      DUE DATE
+                    </TableCell>
+
+                    <TableCell
+                      sx={{
+                        width: "156px",
+                        fontWeight: 600,
+                        color: "#3A3541DE",
+                        fontSize: "12.36px",
+                        lineHeight: "24.72px",
+                        letterSpacing: "0.18px",
+                        position: "relative",
+                        textAlign: "center",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          left: 0,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          height: "14.42px",
+                          width: "2px",
+                          backgroundColor: "#3A35411F",
+                        },
+                      }}
+                    >
+                      ASSIGNED TO
+                    </TableCell>
+
+                    <TableCell
+                      sx={{
+                        fontWeight: 600,
+                        color: "#3A3541DE",
+                        fontSize: "12.36px",
+                        lineHeight: "24.72px",
+                        letterSpacing: "0.18px",
+                        position: "relative",
+                        textAlign: "center",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          left: 0,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          height: "14.42px",
+                          width: "2px",
+                          backgroundColor: "#3A35411F",
+                        },
+                      }}
+                    >
+                      ACTION
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-      
-      <BugActionsDialog
-        open={dialogOpen}
-        anchorEl={dialogAnchorEl}
-        onClose={handleDialogClose}
-        userRole={userRole}
-        bugId={selectedBugId || 0}
-        bugType={bugsData.find(bug => bug.id === selectedBugId)?.type || "bug"}
-        onStatusChange={handleStatusChange}
-        onDelete={handleDeleteBug}
-        isUpdating={updatingBugId === selectedBugId}
-        isDeleting={deletingBugId === selectedBugId}
-      />
+                </TableHead>
 
-      <AddBugDialog
-        open={addBugDialogOpen}
-        onClose={handleAddBugDialogClose}
-        projectId={params.id as string}
-        onBugCreated={handleBugCreated}
-      />
-      {selectedBugId && (
-        <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: '#f0f0f0', padding: '10px', fontSize: '12px', zIndex: 9999 }}>
-          <div>Selected Bug ID: {selectedBugId}</div>
-          <div>Bug Type: {bugsData.find(bug => bug.id === selectedBugId)?.type || "unknown"}</div>
-          <div>User Role: {userRole}</div>
-        </div>
-      )}
-      
-      <PaginationBugs 
-        currentPage={currentPage} 
-        totalPages={totalPages} 
-        totalItems={totalItems} 
-        itemsPerPage={itemsPerPage}
-        onPageChange={handlePageChange}
-        onItemsPerPageChange={handleItemsPerPageChange}
-      />
-    </Box>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        sx={{ textAlign: "center", py: 4 }}
+                      >
+                        <Typography>Loading bugs...</Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : error ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        sx={{ textAlign: "center", py: 4 }}
+                      >
+                        <Typography color="error">{error}</Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : bugsData.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        sx={{ textAlign: "center", py: 4 }}
+                      >
+                        <Typography>No bugs found for this project</Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    bugsData.map((bug) => (
+                      <TableRow key={bug.id}>
+                        <TableCell>
+                          <Checkbox
+                            sx={{
+                              width: "18.54px",
+                              height: "18.54px",
+                              paddingLeft: "21px",
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px",
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                width: "10px",
+                                height: "10px",
+                                borderRadius: "6px",
+                                backgroundColor: getStatusColor(bug.status),
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                fontWeight: "400",
+                                fontSize: "14.36px",
+                                color: "#3A3541AD",
+                              }}
+                            >
+                              {bug.title}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+
+                        <TableCell
+                          sx={{ textAlign: "center", verticalAlign: "middle" }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontWeight: "400",
+                                fontSize: "14.36px",
+                                color: "#3A3541AD",
+                              }}
+                            >
+                              {bug.type}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+
+                        <TableCell
+                          sx={{ textAlign: "center", verticalAlign: "middle" }}
+                        >
+                          <Box
+                            sx={{ display: "flex", justifyContent: "center" }}
+                          >
+                            <Chip
+                              label={bug.status}
+                              sx={{
+                                backgroundColor: getStatusChipColor(bug.status),
+                                color: getStatusColor(bug.status),
+                                fontSize: "12.72px",
+                                lineHeight: "25.45px",
+                                fontWeight: 500,
+                                borderRadius: "6.36px",
+                              }}
+                            />
+                          </Box>
+                        </TableCell>
+
+                        <TableCell
+                          sx={{ textAlign: "center", verticalAlign: "middle" }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            {deadlineToggles[bug.id] ? (
+                              <Typography
+                                onClick={() => handleDeadlineToggle(bug.id)}
+                                sx={{
+                                  color: "#007DFA",
+                                  fontSize: "12px",
+                                  cursor: "pointer",
+                                  fontWeight: 500,
+                                  "&:hover": {
+                                    textDecoration: "underline",
+                                  },
+                                }}
+                              >
+                                {new Date(bug.deadline).toLocaleDateString()}
+                              </Typography>
+                            ) : (
+                              <Tooltip title="Click to view deadline">
+                                <IconButton
+                                  onClick={() => handleDeadlineToggle(bug.id)}
+                                  sx={{
+                                    padding: 0,
+                                    "&:hover": {
+                                      backgroundColor: "transparent",
+                                    },
+                                  }}
+                                >
+                                  <CalendarTodayIcon
+                                    sx={{
+                                      color: "#D0D5DD",
+                                      width: "21px",
+                                      height: "21px",
+                                      cursor: "pointer",
+                                      "&:hover": {
+                                        color: "#007DFA",
+                                      },
+                                    }}
+                                  />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </Box>
+                        </TableCell>
+
+                        <TableCell
+                          sx={{ textAlign: "center", verticalAlign: "middle" }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            {bug.assignedDevelopers &&
+                            bug.assignedDevelopers.length > 0 ? (
+                              bug.assignedDevelopers.map(
+                                (user: User, index: number) => (
+                                  <Avatar
+                                    key={index}
+                                    sx={{
+                                      width: "25.45px",
+                                      height: "25.45px",
+                                      fontSize: "14px",
+                                      fontWeight: "bold",
+                                      backgroundColor: "#000000ff",
+                                    }}
+                                  >
+                                    {user.name.charAt(0)}
+                                  </Avatar>
+                                )
+                              )
+                            ) : (
+                              <Typography
+                                sx={{ fontSize: "12px", color: "#6E6F72" }}
+                              >
+                                Unassigned
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+
+                        <TableCell
+                          sx={{ textAlign: "center", verticalAlign: "middle" }}
+                        >
+                          <IconButton
+                            onClick={(event) =>
+                              handleActionsClick(event, bug.id)
+                            }
+                            disabled={
+                              updatingBugId === bug.id ||
+                              deletingBugId === bug.id
+                            }
+                            sx={{
+                              color: "#3A35418A",
+                              width: "4.12px",
+                              height: "16.48px",
+                              opacity:
+                                updatingBugId === bug.id ||
+                                deletingBugId === bug.id
+                                  ? 0.5
+                                  : 1,
+                            }}
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+
+          <BugActionsDialog
+            open={dialogOpen}
+            anchorEl={dialogAnchorEl}
+            onClose={handleDialogClose}
+            userRole={userRole}
+            bugId={selectedBugId || 0}
+            bugType={
+              bugsData.find((bug) => bug.id === selectedBugId)?.type || "bug"
+            }
+            onStatusChange={handleStatusChange}
+            onDelete={handleDeleteBug}
+            isUpdating={updatingBugId === selectedBugId}
+            isDeleting={deletingBugId === selectedBugId}
+          />
+
+          <AddBugDialog
+            open={addBugDialogOpen}
+            onClose={handleAddBugDialogClose}
+            projectId={params.id as string}
+            onBugCreated={handleBugCreated}
+          />
+
+          <PaginationBugs
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </Box>
+      </Box>
+    </>
   );
 }
-     
