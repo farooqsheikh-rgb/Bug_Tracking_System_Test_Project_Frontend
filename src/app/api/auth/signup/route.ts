@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
+import { handleApiError } from "@/app/serverComponents/HandleAPIError";
+import { CONSTANTS } from "@/app/constants";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const response = await axios.post("http://localhost:8000/api/v1/auth/signup", body, {
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await axios.post(
+      CONSTANTS.BACKEND_SIGNUP_URL,
+      body,
+      {
+        headers: { "Content-Type": CONSTANTS.CONTENT_TYPE_APPLICATION_JSON },
+      }
+    );
 
     const data = response.data;
 
     if (!data.success) {
       return NextResponse.json(
-        { success: false, error: "Signup failed" },
+        { success: false, error: CONSTANTS.SIGNUP_FAILED },
         { status: 400 }
       );
     }
@@ -24,34 +30,32 @@ export async function POST(req: NextRequest) {
     const res = NextResponse.json({ success: true, user: userData });
 
     if (accessToken) {
-      res.cookies.set("accessToken", accessToken, {
+      res.cookies.set(CONSTANTS.COOKIE_NAME_TOKEN, accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === CONSTANTS.PRODUCTION,
         sameSite: "strict",
         path: "/",
-        maxAge: 60 * 60 * 24 * 7, 
+        maxAge: 60 * 60 * 24 * 7,
       });
+
+      res.cookies.set(
+        "userType",
+        userData.user_type || userData.userType || "developer",
+        {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === CONSTANTS.PRODUCTION,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 7,
+        }
+      );
     }
 
     return res;
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          error?: string;
-        };
-        status?: number;
-      };
-    };
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: err.response?.data?.error || "Signup failed",
-      },
-      {
-        status: err.response?.status || 500,
-      }
-    );
+    return handleApiError({
+      error,
+      fallbackMessage: CONSTANTS.SIGNUP_FAILED,
+    });
   }
 }

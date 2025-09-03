@@ -13,9 +13,10 @@ import {
 import Image from "next/image";
 import signImg from "../../../../public/images/sign.jpg";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import SignInputFields from "@/app/components/SignInputFields/page";
+import SignInputFields from "@/app/components/SignInputFields";
 import LockIcon from "@mui/icons-material/Lock";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { CONSTANTS } from "../../constants/index";
 import { useRouter } from "next/navigation";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -112,10 +113,10 @@ export default function Signin() {
     if (!validateForm()) return;
 
     try {
-      const res = await fetch("/api/auth/signin", {
-        method: "POST",
+      const res = await fetch(CONSTANTS.SIGNIN_API_URL, {
+        method: CONSTANTS.POST_METHOD,
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": CONSTANTS.CONTENT_TYPE_APPLICATION_JSON,
         },
         body: JSON.stringify(formValues),
       });
@@ -123,14 +124,14 @@ export default function Signin() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setServerError(data?.error || "Login failed");
+        setServerError(data?.error || CONSTANTS.LOGIN_FAILED);
         return;
       }
 
-      router.push("/projects");
+      router.push(CONSTANTS.PROJECTS_PAGE_URL);
     } catch (err) {
-      console.error("Login error:", err);
-      setServerError("Something went wrong. Please try again.");
+      console.error(CONSTANTS.LOGIN_FAILED, err);
+      setServerError(CONSTANTS.SERVER_ERROR_MESSAGE);
     }
   };
 

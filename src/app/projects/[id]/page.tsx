@@ -28,9 +28,9 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState, useCallback } from "react";
 import { debounce } from "lodash";
-import PaginationBugs from "@/app/components/PaginationBugs/page";
-import BugActionsDialog from "@/app/components/BugActionsDialog/page";
-import AddBugDialog from "@/app/components/AddBugDialog/page";
+import PaginationBugs from "@/app/components/PaginationBugs";
+import BugActionsDialog from "@/app/components/BugActionsDialog";
+import AddBugDialog from "@/app/components/AddBugDialog";
 import AddIcon from "@mui/icons-material/Add";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SearchIcon from "@mui/icons-material/Search";
@@ -67,6 +67,7 @@ export default function ProjectBugs() {
   const params = useParams();
   const router = useRouter();
 
+  const [projectName, setProjectName] = useState('');
   const [userRole, setUserRole] = React.useState<
     "manager" | "QA" | "developer"
   >("developer");
@@ -95,18 +96,12 @@ export default function ProjectBugs() {
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    console.log("User role state changed to:", userRole);
-    console.log("Current user role for dialog:", userRole);
-  }, [userRole]);
-
-  useEffect(() => {
-    console.log("Project data state changed to:", projectData);
-    console.log("Project name from state:", projectData?.name);
-  }, [projectData]);
-
-  useEffect(() => {
     const userType = getUserTypeFromCookies();
     setUserRole(userType as "manager" | "QA" | "developer");
+    const hash = window.location.hash;
+    if (hash) {
+      setProjectName(decodeURIComponent(hash.substring(1)));
+    }
   }, []);
 
   const handleSubtasksChange = (event: SelectChangeEvent) => {
@@ -443,7 +438,7 @@ export default function ProjectBugs() {
               >
                 Projects &gt;{" "}
                 <span style={{ color: "#000000" }}>
-                  {projectData ? projectData.name : "Loading..."}
+                  {projectName}
                 </span>
               </Typography>
 

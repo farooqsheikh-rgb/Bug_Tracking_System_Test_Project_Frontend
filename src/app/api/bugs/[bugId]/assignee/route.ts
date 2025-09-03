@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
+import { handleApiError } from "@/app/serverComponents/HandleAPIError";
+import { CONSTANTS } from "@/app/constants";
 
 export async function POST(
   request: NextRequest,
@@ -7,11 +9,11 @@ export async function POST(
 ) {
   try {
     const { bugId } = await params;
-    const token = request.cookies.get("accessToken")?.value;
+    const token = request.cookies.get(CONSTANTS.COOKIE_NAME_TOKEN)?.value;
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: "No token provided" },
+        { success: false, error: CONSTANTS.NO_TOKEN_PROVIDED },
         { status: 401 }
       );
     }
@@ -19,33 +21,21 @@ export async function POST(
     const body = await request.json();
 
     const response = await axios.post(
-      `http://localhost:8000/api/v1/bugs/${bugId}/assignee`,
+      `${CONSTANTS.BACKEND_BUGS_URL}${bugId}/assignee`,
       body,
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          "Content-Type": CONSTANTS.CONTENT_TYPE_APPLICATION_JSON,
         },
       }
     );
 
     return NextResponse.json(response.data);
-  } catch (error: any) {
-    console.error("Error assigning bug to developer:", error);
-    
-    let errorMessage = "Failed to assign bug to developer";
-    
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    } else if (error.response?.data?.error) {
-      errorMessage = error.response.data.error;
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-    
-    return NextResponse.json(
-      { success: false, error: errorMessage },
-      { status: error.response?.status || 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError({
+      error,
+      fallbackMessage: CONSTANTS.FAILED_TO_ASSIGN_BUG,
+    });
   }
 }

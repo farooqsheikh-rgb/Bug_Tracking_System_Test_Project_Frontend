@@ -23,7 +23,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import projectImg from "../../../public/images/folder.png";
 import groupWhiteImg from "../../../public/images/Group white.png";
 import Image from "next/image";
-import PaginationProjects from "../components/PaginationProjects/page";
+import PaginationProjects from "../components/PaginationProjects";
 import React, { useCallback, useEffect, useState } from "react";
 import { Project } from "@/type/Project";
 import { useRouter } from "next/navigation";
@@ -173,7 +173,7 @@ export default function Projects() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        console.error(
+        console.log(
           "Search error:",
           data.error || "Failed to search projects"
         );
@@ -521,6 +521,7 @@ export default function Projects() {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
+
               >
                 <Image
                   src={groupWhiteImg}
@@ -758,7 +759,9 @@ export default function Projects() {
                             </Typography>
                           </Box>
                         ))}
-                        <Button
+                        
+                        {availableUsers.length!==0 && (
+                          <Button
                           onClick={() => setShowUserDropdown(!showUserDropdown)}
                           sx={{
                             minWidth: "32px",
@@ -774,6 +777,16 @@ export default function Projects() {
                         >
                           <AddIcon fontSize="small" />
                         </Button>
+                        )}
+
+                        {availableUsers.length===0 && (
+                          <Typography
+                            sx={{ color: "#d32f2f", fontSize: "12px", mt: 0.5 }}
+                          >
+                            No users exist!
+                          </Typography>
+                        )}
+                        
                       </Box>
 
                       {showUserDropdown && (
@@ -942,7 +955,7 @@ export default function Projects() {
                     cursor: "pointer",
                   }}
                   onClick={() => {
-                    router.push(`/projects/${item.id}`);
+                    router.push(`/projects/${item.id}#${encodeURIComponent(item.name)}`);
                   }}
                 >
                   <CardContent

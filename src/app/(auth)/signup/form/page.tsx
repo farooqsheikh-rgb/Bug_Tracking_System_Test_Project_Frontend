@@ -15,23 +15,11 @@ import signImg from "../../../../../public/images/sign.jpg";
 import PersonIcon from "@mui/icons-material/Person";
 import WorkIcon from "@mui/icons-material/Work";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import SignInputFields from "@/app/components/SignInputFields/page";
+import SignInputFields from "@/app/components/SignInputFields";
 import LockIcon from "@mui/icons-material/Lock";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useSearchParams, useRouter } from "next/navigation";
-
-const Item = styled(Paper)(() => ({
-  backgroundColor: "#FFFFFF",
-  padding: 0,
-  textAlign: "center",
-  height: "100%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 0,
-  boxShadow: "none",
-  position: "relative",
-}));
+import { CONSTANTS } from "@/app/constants";
 
 const StyledButton = styled(Button)(() => ({
   borderRadius: "8px",
@@ -144,22 +132,22 @@ export default function SignupForm() {
     };
 
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(CONSTANTS.SIGNUP_API_URL, {
+        method: CONSTANTS.POST_METHOD,
+        headers: { "Content-Type": CONSTANTS.CONTENT_TYPE_APPLICATION_JSON },
         body: JSON.stringify(postData),
       });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setServerError(data.error || "Signup failed");
+        setServerError(data.error || CONSTANTS.SIGNUP_FAILED);
         return;
       }
 
-      router.push("/projects");
+      router.push(CONSTANTS.PROJECTS_PAGE_URL);
     } catch (err) {
       console.error(err);
-      setServerError("Something went wrong. Please try again.");
+      setServerError(CONSTANTS.SERVER_ERROR_MESSAGE);
     }
   };
 

@@ -18,6 +18,8 @@ import profileImg from "../../public/images/Profile.png";
 import notificationImg from "../../public/images/Notification.png";
 import messageImg from "../../public/images/Message.png";
 import ellipseImg from "../../public/images/Ellipse 11.png";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const pages = [
   { name: "Projects", icon: categoryImg, path: "/projects" },
@@ -27,12 +29,36 @@ const pages = [
 ];
 
 function ResponsiveAppBar() {
+  const router = useRouter();
   const pathname = usePathname();
+
+  const [loading, setLoading] = useState(false);
 
   const getActivePage = (pagePath: string, pageName: string) => {
     if (pageName === "Tasks" && pathname.includes("/bugs")) return true;
     if (pageName === "Projects" && pathname === "/projects") return true;
     return pathname === pagePath;
+  };
+
+  const handleSignOut = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/signout", {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        router.push("/signin");
+      } else {
+        console.error("Sign out failed:", data.error);
+      }
+    } catch (err) {
+      console.error("Error signing out:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,8 +85,8 @@ function ResponsiveAppBar() {
             height: "100%",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", }}>
-            <Box sx={{ display: "flex", alignItems: "center",  gap: "6.92px" }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: "6.92px" }}>
               <Box
                 sx={{
                   width: 31,
@@ -100,7 +126,7 @@ function ResponsiveAppBar() {
               </Typography>
             </Box>
 
-            <Box sx={{ display: "flex", gap: "46px" , paddingLeft: "206.47px"}}>
+            <Box sx={{ display: "flex", gap: "46px", paddingLeft: "206.47px" }}>
               {pages.map((page) => {
                 const isActive = getActivePage(page.path, page.name);
 
@@ -130,7 +156,7 @@ function ResponsiveAppBar() {
                       alignItems: "center",
                       textTransform: "none",
                       fontSize: "12px",
-                      fontWeight: 500
+                      fontWeight: 500,
                     }}
                   >
                     {page.name}
@@ -140,7 +166,31 @@ function ResponsiveAppBar() {
             </Box>
           </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: "42px", paddingLeft: "117px" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "42px",
+              paddingLeft: "117px",
+            }}
+          >
+            <Button
+              variant="contained"
+              onClick={handleSignOut}
+              sx={{
+                backgroundColor: "#007DFA",
+                color: "#FFFFFF",
+                textTransform: "none",
+                borderRadius: "5px",
+                fontWeight: 500,
+                fontSize: "13px",
+                // width: "60px",
+                height: "45px",
+                marginBottom: "-10px",
+              }}
+            >
+              Logout
+            </Button>
             <Box sx={{ width: 24, height: 24, position: "relative" }}>
               <Image
                 src={notificationImg}
@@ -182,7 +232,7 @@ function ResponsiveAppBar() {
               >
                 Dev.
               </Typography>
- 
+
               <IconButton
                 sx={{
                   p: 0,
@@ -197,7 +247,9 @@ function ResponsiveAppBar() {
           </Box>
         </Toolbar>
 
-        <Divider sx={{ bgcolor: "#ECECEE", marginTop: "88.69", height: "1px" }} />
+        <Divider
+          sx={{ bgcolor: "#ECECEE", marginTop: "88.69", height: "1px" }}
+        />
       </Box>
     </AppBar>
   );

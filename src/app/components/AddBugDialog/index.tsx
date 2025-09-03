@@ -119,7 +119,7 @@ export default function AddBugDialog({ open, onClose, projectId, onBugCreated }:
   };
 
   const handleSubmit = async () => {
-    if (!title.trim() || !description.trim() || !dueDate) {
+    if (!title.trim() || !description.trim() || !dueDate || assignedUsers.length === 0) {
       setError('Please fill in all required fields');
       return;
     }

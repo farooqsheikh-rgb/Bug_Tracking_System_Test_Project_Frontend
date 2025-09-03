@@ -9,16 +9,14 @@ import {
 } from "@mui/material";
 import Image from "next/image";
 import signImg from "../../../../public/images/Left.png";
-import UserTypeSelectionCard from "@/app/components/UserTypeSelectionCard/page";
-import PersonIcon from "@mui/icons-material/Person";
-import WorkIcon from "@mui/icons-material/Work";
-import { VerifiedUser } from "@mui/icons-material";
+import UserTypeSelectionCard from "@/app/components/UserTypeSelectionCard";
 import { UserTypeSelectionCardProps } from "../../../../interfaces/UserTypeSelectionCardProps";
 import userImg from "../../../../public/images/user.png";
 import briefcaseImg from "../../../../public/images/briefcase.png";
 import freelancerImg from "../../../../public/images/freelancer-freelance 1.png";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CONSTANTS } from "@/app/constants";
 
 const Item = styled(Paper)(({ theme }) => ({
   paddingTop: "265px",
@@ -58,7 +56,7 @@ export default function Signup() {
 
   const handleCardSelect = (type: string) => {
     setSelectedType(type);
-    router.push(`/signup/form?type=${type}`);
+    router.push(`${CONSTANTS.SIGNUP_FORM_PAGE_URL}${type}`);
   };
 
   return (

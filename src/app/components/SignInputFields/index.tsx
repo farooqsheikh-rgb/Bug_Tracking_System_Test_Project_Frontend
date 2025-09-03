@@ -1,5 +1,6 @@
 import * as React from "react";
-import { TextField, styled, InputAdornment } from "@mui/material";
+import { TextField, styled, InputAdornment, IconButton } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   backgroundColor: "#F5F5F7",
@@ -43,9 +44,14 @@ export default function SignInputFields({
   inputProps,
 }: SignInputFieldsProps) {
   const [focus, setFocus] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
-  // Label should shrink for non-"user_type" fields if focused or has value
   const shrinkLabel = name === "user_type" ? true : focus || Boolean(value);
+  const isPasswordField = name === "password";
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   return (
     <StyledTextField
@@ -55,6 +61,7 @@ export default function SignInputFields({
       label={label}
       name={name}
       value={value}
+      type={isPasswordField && !showPassword ? "password" : "text"}
       onChange={onChange}
       onKeyDown={onKeyDown}
       onBlur={() => setFocus(false)}
@@ -85,6 +92,18 @@ export default function SignInputFields({
             }}
           >
             {icon}
+          </InputAdornment>
+        ),
+        endAdornment: isPasswordField && (
+          <InputAdornment position="end">
+            <IconButton
+              onClick={handleTogglePasswordVisibility}
+              edge="end"
+              size="small"
+              sx={{ color: "#3C4071", marginRight: "8px" }}
+            >
+              {showPassword ? <VisibilityOff /> : <Visibility />}
+            </IconButton>
           </InputAdornment>
         ),
       }}
