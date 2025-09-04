@@ -543,7 +543,7 @@ export default function ProjectBugs() {
                 padding: "0 32px",
               }}
             >
-              <Box sx={{ marginRight: "152px" }}>
+              <Box sx={{  }}>
                 <TextField
                   placeholder="Search"
                   variant="outlined"
@@ -579,6 +579,7 @@ export default function ProjectBugs() {
                   display: "flex",
                   gap: "12px",
                   justifyContent: "center",
+                  marginLeft: "104px"
                 }}
               >
                 <FormControl sx={{ minWidth: 121 }}>
@@ -662,7 +663,7 @@ export default function ProjectBugs() {
                   display: "flex",
                   gap: "8px",
                   alignItems: "center",
-                  marginLeft: "240px",
+                  paddingLeft: "240px",
                 }}
               >
                 <IconButton

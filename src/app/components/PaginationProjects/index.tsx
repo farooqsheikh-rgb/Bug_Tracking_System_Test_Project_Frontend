@@ -93,14 +93,14 @@ export default function PaginationProjects({
           <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <IconButton
               onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
+              // disabled={currentPage === 1}
               sx={{
                 backgroundColor: "#DFDFDF",
-                color: currentPage === 1 ? "#BDBDBD" : "#343A40",
+                color: "#343A40",
                 width: "30px",
                 height: "30px",
                 borderRadius: "2px",
-                paddingLeft: "40px"
+                marginLeft: "40px"
               }}
             >
               <KeyboardArrowDownIcon
@@ -135,10 +135,10 @@ export default function PaginationProjects({
 
             <IconButton
               onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
+              // disabled={currentPage === totalPages}
               sx={{
                 backgroundColor: "#DFDFDF",
-                color: currentPage === totalPages ? "#BDBDBD" : "#343A40",
+                color: "#343A40",
                 width: "30px",
                 height: "30px",
                 borderRadius: "2px",

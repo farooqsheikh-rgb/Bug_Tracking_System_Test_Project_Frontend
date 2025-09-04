@@ -43,6 +43,7 @@ export default function Projects() {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   const [userRole, setUserRole] = useState<"manager" | "QA" | "developer">(
     "developer"
   );
@@ -121,6 +122,7 @@ export default function Projects() {
 
   const fetchUsers = useCallback(async () => {
     try {
+      setIsSearchingUsers(true);
       const response = await fetch("/api/users", {
         credentials: "include",
       });
@@ -133,6 +135,8 @@ export default function Projects() {
       }
     } catch (err) {
       console.error("Error fetching users:", err);
+    } finally{
+      setIsSearchingUsers(false);
     }
   }, []);
 
@@ -779,11 +783,17 @@ export default function Projects() {
                         </Button>
                         )}
 
-                        {availableUsers.length===0 && (
+                        {isSearchingUsers && (
+                          <Box sx={{ textAlign: "center", py: 2 }}>
+                            <Typography sx={{ color: "#6E6F72" }}>Searching QAs and Developers...</Typography>
+                          </Box>
+                        )}
+
+                        {!isSearchingUsers && availableUsers.length===0 && (
                           <Typography
                             sx={{ color: "#d32f2f", fontSize: "12px", mt: 0.5 }}
                           >
-                            No users exist!
+                            No QAs and Developers available
                           </Typography>
                         )}
                         
@@ -924,7 +934,18 @@ export default function Projects() {
               </Box>
             )}
 
-            {!isSearching &&
+            {
+              !isSearching &&
+              projectsData.length === 0 && (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Typography sx={{ color: "#6E6F72" }}>
+                    No projects found
+                  </Typography>
+                </Box>
+              )
+            }
+
+            {/* {!isSearching &&
               projectsData.length === 0 &&
               searchQuery.trim() !== "" && (
                 <Box sx={{ textAlign: "center", py: 4 }}>
@@ -932,7 +953,7 @@ export default function Projects() {
                     No projects found matching &quot;{searchQuery}&quot;
                   </Typography>
                 </Box>
-              )}
+              )} */}
 
             <Box
               sx={{
